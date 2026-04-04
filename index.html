@@ -478,6 +478,9 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div class="nav-item" onclick="go('playbook')">
       <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h4M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Playbook
     </div>
+    <div class="nav-item" onclick="openGradingSettings()">
+      <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M11.1 4.9l-1.4 1.4M4.9 11.1l-1.4 1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Grading Criteria
+    </div>
     <div class="nav-item" onclick="if(confirm('Delete ALL trades?')){state.trades=[];save();renderDashboard();}" style="color:var(--red)">
       <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V2h4v2M5 4v9a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Clear trades
     </div>
@@ -1140,7 +1143,8 @@ function save() {
       mistakes: state.mistakes,
       playbook: state.playbook,
       rules: state.rules,
-      routines: state.routines
+      routines: state.routines,
+      gradingCriteria: state.gradingCriteria || {}
     }).then(()=>{ if(dot) dot.className='sync-dot'; }).catch(()=>{ if(dot) dot.className='sync-dot'; });
   }
 }
@@ -1148,13 +1152,13 @@ function save() {
 // Called by Firebase module once cloud data is loaded
 window._mergeCloudData = function(cloudData) {
   if (!cloudData) return;
-  // Cloud wins — it's the source of truth after sign-in
   state.trades = cloudData.trades || state.trades;
   state.setups = cloudData.setups || state.setups;
   state.mistakes = cloudData.mistakes || state.mistakes;
   state.playbook = cloudData.playbook || state.playbook;
   state.rules = cloudData.rules || state.rules;
   state.routines = cloudData.routines || state.routines;
+  state.gradingCriteria = cloudData.gradingCriteria || state.gradingCriteria || {};
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){}
 };
 
@@ -1401,6 +1405,7 @@ TRADER HISTORY CONTEXT (${prevTrades.length} prior trades):
 
 STRATEGY: Mech Model (HTF sweep → inversion FVG entry → LRLR/eq highs/session HL targets) or Continuation (post-sweep pullback into FVG → inversion).
 Rules: Only 9:30–11:00 EST. Always wait for inversion FVG. Targets = low-resistance liquidity only.
+${buildGradingContext()}
 
 THIS TRADE:
 ${t.ticker} ${t.side.toUpperCase()} | ${t.datetime||'unknown'} | Entry:${t.entry} Exit:${t.exit} Qty:${t.qty}
@@ -1770,7 +1775,7 @@ async function runInsights() {
   const totalPnL=state.trades.reduce((a,t)=>a+calcPnL(t),0);
   const wr=Math.round(state.trades.filter(t=>calcPnL(t)>0).length/state.trades.length*100);
   const prompt=`You are an expert trading coach analyzing a futures scalper's journal. Trader uses ICT methods (FVGs, liquidity sweeps, inversions) on NQ/MNQ, NY session 9:30-11:00 EST only.
-
+${buildGradingContext()}
 JOURNAL (${state.trades.length} trades, ${wr}% win rate, total P&L $${Math.round(totalPnL)}):
 ${summary}
 
@@ -2452,7 +2457,7 @@ async function sendChatMessage() {
   }).join('\n');
 
   const systemPrompt = `You are EDGE AI — a sharp, direct trading coach embedded in a trading journal app. You know this trader's full history and give specific, data-driven answers. Never be generic. Always reference their actual numbers.
-
+${buildGradingContext()}
 TRADER PROFILE:
 - Trades: NQ/MNQ futures, NY session 9:30-11:00 EST only
 - Strategy: ICT-based — Mech Model (HTF sweep → inversion FVG entry) and Continuation setups
@@ -2523,27 +2528,199 @@ function toggleExplainer(id) {
 }
 
 // ─── ONBOARDING TOUR ─────────────────────────────────────────────────────────
-const ONBOARD_KEY='edge_onboarded_v1';
+const ONBOARD_KEY='edge_onboarded_v2';
 let onboardStep=0;
+
+// Grading criteria answers collected during onboarding
+if (!state.gradingCriteria) state.gradingCriteria = {};
+
 const onboardSlides=[
-  {icon:'👋',title:'Welcome to EDGE',body:`EDGE is your <strong>AI-powered trading journal</strong> that finds what's making you money — and what's killing your account.<br><br>This quick tour takes 60 seconds and shows you exactly how to get value from day one.`},
-  {icon:'⚡',title:'Step 1 — Log your trades',body:`Go to <strong>Log Trade</strong> in the sidebar. Fill in ticker, side, entry, exit, and hit <strong>"Log + AI Review."</strong><br><br>The AI instantly grades your trade <strong>A–F</strong>, tells you what went right and wrong, and auto-tags your mistakes. No manual tagging needed.`},
-  {icon:'📊',title:'Step 2 — Your dashboard fills in',body:`After 3+ trades your <strong>equity curve</strong>, win rate, avg win/loss, and max drawdown all appear automatically.<br><br>After 5+ trades the <strong>Live Pattern Feed</strong> starts showing insights like <em>"Your best hour is 9:00 AM"</em> or <em>"FOMO has cost you $840."</em>`},
-  {icon:'🧠',title:'Step 3 — Let AI coach you',body:`<strong>AI Insights</strong> — run a full analysis of your trade history weekly. Finds patterns you can't see yourself.<br><br><strong>Trade Copilot</strong> — before entering a trade, type in your entry/stop/target and get a GO / CAUTION / SKIP verdict based on your personal history.`},
-  {icon:'🎯',title:'Step 4 — Build discipline',body:`<strong>Daily Routine</strong> — fill in your pre-market plan and post-market review every day.<br><br><strong>Rule Tracker</strong> — add rules like "No trades after 11AM" and track how much money you lose when you break them.<br><br><strong>Tilt Detection</strong> — automatically flags revenge trading and overtrading.`},
-  {icon:'🔥',title:"You're all set",body:`Start by logging your first trade — the app gets smarter with every entry.<br><br><strong>Your data syncs to your Google account</strong> so it's always backed up and works on any device.<br><br>Good luck out there. Trust your plan, not your emotions.`}
+  {
+    icon:'👋',
+    title:'Welcome to EDGE',
+    body:`EDGE is your <strong>AI-powered trading journal</strong> that finds what's making you money — and what's killing your account.<br><br>This quick tour sets up your <strong>personal grading system</strong> so the AI grades your trades the way YOU define a good trade — not generic rules.`
+  },
+  {
+    icon:'🎯',
+    title:'How do you define an A+ trade?',
+    body:`Tell the AI what a perfect trade looks like for you.`,
+    interactive: 'aplus'
+  },
+  {
+    icon:'📏',
+    title:'What\'s your minimum R:R?',
+    body:`Trades below this R:R will be penalized in grading.`,
+    interactive: 'minrr'
+  },
+  {
+    icon:'⏰',
+    title:'Do you have time restrictions?',
+    body:`The AI will flag trades taken outside your ideal window.`,
+    interactive: 'time'
+  },
+  {
+    icon:'📋',
+    title:'What are your must-follow rules?',
+    body:`These are the rules that, if broken, automatically lower a grade. Add the ones that matter most to you.`,
+    interactive: 'rules'
+  },
+  {
+    icon:'❌',
+    title:'What instantly makes a trade bad?',
+    body:`These behaviors automatically cap a trade at a D or F grade no matter the outcome.`,
+    interactive: 'dealbreakers'
+  },
+  {
+    icon:'⚡',
+    title:'Log trades, get graded your way',
+    body:`Every AI review will now grade your trades against <strong>your criteria</strong>, not generic rules.<br><br>You can update your grading criteria anytime in <strong>Settings</strong> in the sidebar.<br><br>Start by logging your first trade — the AI gets smarter with every entry.`
+  }
 ];
-function showOnboard(){if(localStorage.getItem(ONBOARD_KEY))return;onboardStep=0;document.getElementById('onboard-overlay').style.display='flex';renderOnboardStep();}
+
+const GRADING_TEMPLATES = {
+  aplus: {
+    label: 'An A+ trade is...',
+    placeholder: 'e.g. Waited for HTF sweep, confirmed inversion FVG, hit my target with 2R+, no early exit, followed my plan exactly',
+    key: 'aplusDefinition',
+    type: 'textarea'
+  },
+  minrr: {
+    label: 'Minimum acceptable R:R',
+    options: ['1:1','1.5:1','2:1','2.5:1','3:1','Custom'],
+    key: 'minRR',
+    type: 'select',
+    custom: true
+  },
+  time: {
+    label: 'I only trade between...',
+    fields: [
+      {id:'time-start', label:'Start (EST)', placeholder:'09:30', key:'sessionStart'},
+      {id:'time-end', label:'End (EST)', placeholder:'11:00', key:'sessionEnd'}
+    ],
+    type: 'time'
+  },
+  rules: {
+    label: 'My must-follow rules (one per line)',
+    placeholder: 'No trades after 11AM\nMax 3 trades per day\nOnly trade with a confirmed setup\nNever move stop to breakeven before 1R\nOnly trade NY session',
+    key: 'mustFollowRules',
+    type: 'textarea'
+  },
+  dealbreakers: {
+    label: 'Instant grade killer — these behaviors always get D/F',
+    options: ['FOMO entry','No setup','Ignored stop loss','Revenge trade','Traded outside hours','Sized up after a loss','Chased price'],
+    key: 'dealbreakers',
+    type: 'multicheck'
+  }
+};
+
+function showOnboard(){
+  if(localStorage.getItem(ONBOARD_KEY))return;
+  onboardStep=0;
+  document.getElementById('onboard-overlay').style.display='flex';
+  renderOnboardStep();
+}
+
 function renderOnboardStep(){
   const slide=onboardSlides[onboardStep];
+  const total=onboardSlides.length;
+
   document.getElementById('onboard-steps').innerHTML=onboardSlides.map((_,i)=>`<div class="onboard-step-dot ${i<onboardStep?'done':i===onboardStep?'active':''}"></div>`).join('');
-  document.getElementById('onboard-content').innerHTML=`<div class="onboard-icon">${slide.icon}</div><div class="onboard-title">${slide.title}</div><div class="onboard-body">${slide.body}</div>`;
+
+  let interactiveHTML = '';
+  if (slide.interactive) {
+    const tmpl = GRADING_TEMPLATES[slide.interactive];
+    const gc = state.gradingCriteria;
+
+    if (tmpl.type === 'textarea') {
+      interactiveHTML = `<textarea id="ob-input" style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:13px;font-family:'Geist',sans-serif;color:var(--text);resize:vertical;line-height:1.6;margin-top:10px" placeholder="${tmpl.placeholder}">${gc[tmpl.key]||''}</textarea>`;
+    } else if (tmpl.type === 'select') {
+      const opts = tmpl.options.map(o=>`<option value="${o}" ${gc[tmpl.key]===o?'selected':''}>${o}</option>`).join('');
+      interactiveHTML = `<select id="ob-select" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:14px;color:var(--text);margin-top:10px">${opts}</select>
+        <input id="ob-custom" type="text" placeholder="e.g. 1.8" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:13px;color:var(--text);margin-top:8px;display:${gc[tmpl.key]==='Custom'?'block':'none'}" value="${gc.minRRCustom||''}">
+        <script>document.getElementById('ob-select').addEventListener('change',function(){document.getElementById('ob-custom').style.display=this.value==='Custom'?'block':'none'});<\/script>`;
+    } else if (tmpl.type === 'time') {
+      interactiveHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        ${tmpl.fields.map(f=>`<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">${f.label}</label><input id="${f.id}" type="time" placeholder="${f.placeholder}" value="${gc[f.key]||''}" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:9px;font-size:14px;color:var(--text);font-family:'Geist Mono',monospace"></div>`).join('')}
+      </div>`;
+    } else if (tmpl.type === 'multicheck') {
+      const saved = gc[tmpl.key] || [];
+      interactiveHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        ${tmpl.options.map(o=>`<label style="display:flex;align-items:center;gap:7px;padding:7px 12px;background:var(--bg3);border:1px solid ${saved.includes(o)?'var(--red-border)':'var(--border2)'};border-radius:var(--r);cursor:pointer;font-size:13px;color:${saved.includes(o)?'var(--red)':'var(--muted)'}"><input type="checkbox" id="ob-chk-${o.replace(/\s/g,'_')}" ${saved.includes(o)?'checked':''} style="accent-color:var(--red)">${o}</label>`).join('')}
+      </div>`;
+    }
+  }
+
+  document.getElementById('onboard-content').innerHTML=`
+    <div class="onboard-icon">${slide.icon}</div>
+    <div class="onboard-title">${slide.title}</div>
+    <div class="onboard-body">${slide.body}</div>
+    ${interactiveHTML}`;
+
   document.getElementById('onboard-back').style.display=onboardStep>0?'':'none';
-  document.getElementById('onboard-next').textContent=onboardStep===onboardSlides.length-1?"Let's go →":'Next →';
+  document.getElementById('onboard-next').textContent=onboardStep===total-1?"Let's go →":'Next →';
 }
-function onboardNav(dir){onboardStep+=dir;if(onboardStep>=onboardSlides.length){skipOnboard();return;}onboardStep=Math.max(0,onboardStep);renderOnboardStep();}
-function skipOnboard(){localStorage.setItem(ONBOARD_KEY,'1');document.getElementById('onboard-overlay').style.display='none';}
+
+function saveCurrentOnboardStep() {
+  const slide = onboardSlides[onboardStep];
+  if (!slide.interactive) return;
+  const tmpl = GRADING_TEMPLATES[slide.interactive];
+  const gc = state.gradingCriteria;
+
+  if (tmpl.type === 'textarea') {
+    const val = document.getElementById('ob-input')?.value?.trim();
+    if (val) gc[tmpl.key] = val;
+  } else if (tmpl.type === 'select') {
+    const sel = document.getElementById('ob-select')?.value;
+    gc[tmpl.key] = sel;
+    if (sel === 'Custom') gc.minRRCustom = document.getElementById('ob-custom')?.value?.trim();
+  } else if (tmpl.type === 'time') {
+    tmpl.fields.forEach(f => {
+      const val = document.getElementById(f.id)?.value;
+      if (val) gc[f.key] = val;
+    });
+  } else if (tmpl.type === 'multicheck') {
+    gc[tmpl.key] = tmpl.options.filter(o => document.getElementById('ob-chk-'+o.replace(/\s/g,'_'))?.checked);
+  }
+  save();
+}
+
+function onboardNav(dir){
+  saveCurrentOnboardStep();
+  onboardStep+=dir;
+  if(onboardStep>=onboardSlides.length){skipOnboard();return;}
+  onboardStep=Math.max(0,onboardStep);
+  renderOnboardStep();
+}
+function skipOnboard(){
+  saveCurrentOnboardStep();
+  localStorage.setItem(ONBOARD_KEY,'1');
+  document.getElementById('onboard-overlay').style.display='none';
+}
 window._showOnboardIfNew=showOnboard;
+
+function openGradingSettings() {
+  // Jump straight to the grading slides (skip welcome slide)
+  onboardStep = 1;
+  document.getElementById('onboard-overlay').style.display = 'flex';
+  renderOnboardStep();
+}
+
+// Build grading criteria string for AI prompts
+function buildGradingContext() {
+  const gc = state.gradingCriteria;
+  if (!gc || !Object.keys(gc).length) return '';
+  const lines = [];
+  if (gc.aplusDefinition) lines.push(`A+ TRADE DEFINITION: "${gc.aplusDefinition}"`);
+  if (gc.minRR) {
+    const rr = gc.minRR === 'Custom' ? gc.minRRCustom : gc.minRR.replace(':1','');
+    if (rr) lines.push(`MINIMUM R:R: ${rr} — trades below this are penalized`);
+  }
+  if (gc.sessionStart || gc.sessionEnd) lines.push(`TRADING HOURS: ${gc.sessionStart||'any'} – ${gc.sessionEnd||'any'} EST only — trades outside this window get a lower grade`);
+  if (gc.mustFollowRules) lines.push(`MUST-FOLLOW RULES:\n${gc.mustFollowRules}`);
+  if (gc.dealbreakers?.length) lines.push(`INSTANT GRADE KILLERS (auto D/F if present): ${gc.dealbreakers.join(', ')}`);
+  if (!lines.length) return '';
+  return `\nTRADER'S PERSONAL GRADING CRITERIA (use these to grade, not generic rules):\n${lines.join('\n')}\n`;
+}
 
 function openPhotoViewer(src) {
   document.getElementById('photo-viewer-img').src = src;
