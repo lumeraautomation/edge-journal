@@ -689,6 +689,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       </table>
     </div>
   </div>
+
+  <!-- BE ANALYSIS -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Breakeven analysis</span>
+      <span class="card-sub" id="be-headline"></span>
+    </div>
+    <div id="be-analysis-content"><div class="empty"><strong>No BE data yet</strong>Tag trades with Win, Loss, BE → Win, or BE → Loss outcomes to see this analysis.</div></div>
+  </div>
 </div>
 
 <!-- MISTAKES -->
@@ -1523,6 +1532,132 @@ function renderSetupAnalytics() {
     const worst=v.lossPnls.length?Math.min(...v.lossPnls):0;
     return `<tr><td><strong>${s}</strong></td><td>${v.count}</td><td class="${wr>=50?'pnl-pos':'pnl-neg'}">${wr}%</td><td class="${v.pnl>=0?'pnl-pos':'pnl-neg'}">${pf(v.pnl)}</td><td class="pnl-pos">${avgW?'+$'+Math.round(avgW):'—'}</td><td class="pnl-neg">${avgL?'-$'+Math.abs(Math.round(avgL)):'—'}</td><td class="pnl-pos">${best?'+$'+Math.round(best):'—'}</td><td class="pnl-neg">${worst?'-$'+Math.abs(Math.round(worst)):'—'}</td></tr>`;
   }).join('');
+
+  // ── BE ANALYSIS ──────────────────────────────────────────────────────────────
+  const beEl = document.getElementById('be-analysis-content');
+  const headEl = document.getElementById('be-headline');
+  const T = state.trades;
+
+  const wins    = T.filter(t=>t.outcome==='win');
+  const losses  = T.filter(t=>t.outcome==='loss');
+  const beWins  = T.filter(t=>t.outcome==='be_win');
+  const beLoss  = T.filter(t=>t.outcome==='be_loss');
+  const allBE   = [...beWins, ...beLoss];
+
+  if (!allBE.length && !wins.length && !losses.length) {
+    beEl.innerHTML = '<div class="empty"><strong>No outcome data yet</strong>Tag trades with Win, Loss, BE → Win, or BE → Loss outcomes to see this analysis.</div>';
+    headEl.textContent = '';
+    return;
+  }
+
+  const avgWinPnL  = wins.length  ? wins.reduce((a,t)=>a+calcPnL(t),0)/wins.length  : 0;
+  const avgLossPnL = losses.length ? Math.abs(losses.reduce((a,t)=>a+calcPnL(t),0)/losses.length) : 0;
+  const beWinPnL   = beWins.length  ? beWins.reduce((a,t)=>a+calcPnL(t),0)/beWins.length  : 0;
+  const beLossPnL  = beLoss.length  ? beLoss.reduce((a,t)=>a+calcPnL(t),0)/beLoss.length  : 0;
+
+  // What would BE → Win have made if held to full target?
+  const beWinPotential = beWins.filter(t=>t.tp&&t.entry).map(t=>{
+    const mult={NQ:20,MNQ:2,ES:50,MES:5}[t.ticker?.toUpperCase()]||1;
+    const dir=t.side==='long'?1:-1;
+    return dir*(t.tp-t.entry)*mult*(t.qty||1);
+  });
+  const avgBeWinPotential = beWinPotential.length ? beWinPotential.reduce((a,b)=>a+b,0)/beWinPotential.length : null;
+
+  // What would BE → Loss have cost at full stop?
+  const beLossPotential = beLoss.filter(t=>t.sl&&t.entry).map(t=>{
+    const mult={NQ:20,MNQ:2,ES:50,MES:5}[t.ticker?.toUpperCase()]||1;
+    const dir=t.side==='long'?1:-1;
+    return dir*(t.sl-t.entry)*mult*(t.qty||1);
+  });
+  const avgBeLossPotential = beLossPotential.length ? beLossPotential.reduce((a,b)=>a+b,0)/beLossPotential.length : null;
+
+  const totalBEPnL = allBE.reduce((a,t)=>a+calcPnL(t),0);
+  const beRate = T.filter(t=>t.outcome).length ? Math.round(allBE.length/T.filter(t=>t.outcome).length*100) : 0;
+
+  // Verdict
+  const beWinRate = allBE.length ? Math.round(beWins.length/allBE.length*100) : 0;
+  const verdict = beWinRate >= 60 ? 'helping' : beWinRate <= 40 ? 'hurting' : 'mixed';
+  const verdictColor = verdict==='helping'?'var(--green)':verdict==='hurting'?'var(--red)':'var(--amber)';
+  const verdictText = verdict==='helping'
+    ? `Your BE management is working — ${beWinRate}% of BE trades eventually win.`
+    : verdict==='hurting'
+    ? `BE is costing you — only ${beWinRate}% of BE trades win. You may be moving stops too early.`
+    : `Mixed results. ${beWinRate}% of BE trades win — not a clear edge either way.`;
+
+  headEl.textContent = `${allBE.length} BE trades tracked`;
+
+  const outcomeName = {win:'Win',loss:'Loss',be_win:'BE → Win',be_loss:'BE → Loss'};
+
+  beEl.innerHTML = `
+    <div style="background:${verdictColor}18;border:1px solid ${verdictColor}40;border-radius:var(--r);padding:12px 14px;margin-bottom:16px;font-size:13px;line-height:1.6">
+      <strong style="color:${verdictColor}">Verdict: BE is ${verdict}</strong><br>
+      <span style="color:var(--muted)">${verdictText}</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px">
+      <div class="metric" style="text-align:center">
+        <div class="metric-label">BE → Win</div>
+        <div class="metric-val pos">${beWins.length}</div>
+        <div class="metric-sub">avg $${Math.round(beWinPnL)}/trade</div>
+      </div>
+      <div class="metric" style="text-align:center">
+        <div class="metric-label">BE → Loss</div>
+        <div class="metric-val neg">${beLoss.length}</div>
+        <div class="metric-sub">avg $${Math.round(beLossPnL)}/trade</div>
+      </div>
+      <div class="metric" style="text-align:center">
+        <div class="metric-label">BE win rate</div>
+        <div class="metric-val ${beWinRate>=50?'pos':'neg'}">${allBE.length?beWinRate+'%':'—'}</div>
+        <div class="metric-sub">of all BE trades</div>
+      </div>
+      <div class="metric" style="text-align:center">
+        <div class="metric-label">Total BE P&L</div>
+        <div class="metric-val ${totalBEPnL>=0?'pos':'neg'}">${pf(totalBEPnL)}</div>
+        <div class="metric-sub">${beRate}% of tagged trades</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      ${beWins.length&&avgBeWinPotential?`
+      <div class="card" style="background:var(--bg3)">
+        <div class="card-title" style="color:var(--green);margin-bottom:8px">BE → Win — what you left on the table</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7">
+          You moved to BE on ${beWins.length} winning trade${beWins.length>1?'s':''}.<br>
+          Avg actual P&L: <strong style="color:var(--text)">$${Math.round(beWinPnL)}</strong><br>
+          ${avgBeWinPotential?`Avg if held to target: <strong style="color:var(--green)">+$${Math.round(avgBeWinPotential)}</strong><br>Left on table: <strong style="color:var(--amber)">$${Math.round(avgBeWinPotential-beWinPnL)}/trade</strong>`:'Add target prices to see potential.'}
+        </div>
+      </div>`:''}
+      ${beLoss.length?`
+      <div class="card" style="background:var(--bg3)">
+        <div class="card-title" style="color:var(--red);margin-bottom:8px">BE → Loss — the false safety net</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7">
+          You moved to BE on ${beLoss.length} trade${beLoss.length>1?'s':''}  that reversed.<br>
+          Avg loss after BE: <strong style="color:var(--red)">$${Math.round(Math.abs(beLossPnL))}</strong><br>
+          ${avgBeLossPotential?`If stopped at original SL: <strong style="color:var(--text)">$${Math.round(Math.abs(avgBeLossPotential))}</strong><br>${Math.abs(beLossPnL)<Math.abs(avgBeLossPotential)?'<strong style="color:var(--green)">BE saved you money on these.</strong>':'<strong style="color:var(--red)">Original SL would have been better.</strong>'}`:'Add stop prices to compare vs original SL.'}
+        </div>
+      </div>`:''}
+    </div>
+
+    <div>
+      <div class="card-title" style="margin-bottom:10px">All BE trades</div>
+      <table class="trades-table" style="width:100%">
+        <thead><tr><th>Date</th><th>Ticker</th><th>Side</th><th>Outcome</th><th>Actual P&L</th><th>Setup</th></tr></thead>
+        <tbody>
+          ${allBE.map(t=>{
+            const pnl=calcPnL(t);
+            const isBeW=t.outcome==='be_win';
+            return `<tr>
+              <td>${t.datetime?t.datetime.slice(0,10):''}</td>
+              <td><strong>${t.ticker}</strong></td>
+              <td><span class="side-pill ${t.side==='long'?'long-pill':'short-pill'}">${t.side.toUpperCase()}</span></td>
+              <td><span class="tag-pill amber-pill">${outcomeName[t.outcome]}</span></td>
+              <td class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</td>
+              <td>${(t.setups||[]).map(s=>`<span class="tag-pill setup-pill">${s}</span>`).join('')||'—'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 // ─── MISTAKE ANALYTICS ────────────────────────────────────────────────────────
