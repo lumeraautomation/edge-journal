@@ -21,7 +21,7 @@
 html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--display)}
 #app-shell{width:100%;height:100vh;overflow:hidden}
 .shell{display:flex;height:100vh;width:100%;overflow:hidden}
-.sidebar{width:210px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 0;flex-shrink:0}
+.sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;height:100vh;overflow-y:auto}
 .logo{padding:0 20px 24px;font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.5px;font-family:'Syne',sans-serif}
 .logo span{color:var(--green)}
 .logo-sub{font-size:10px;color:var(--dim);font-weight:400;letter-spacing:.04em;display:block;margin-top:2px;font-family:'Geist',sans-serif}
@@ -32,8 +32,8 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.6}
 .nav-item.active svg{opacity:1}
 
-.main{flex:1;overflow-y:auto;background:var(--bg)}
-.page{display:none;padding:28px;min-height:100vh;max-width:1400px}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);min-width:0;height:100vh}
+.page{display:none;padding:24px;max-width:800px}
 .page.active{display:block}
 
 .page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px}
@@ -318,7 +318,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .onboard-checklist li .oc-action{font-size:11px;color:var(--green);font-weight:700}
 
 /* AI CHAT PANEL */
-.chat-panel{width:300px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;height:100vh}
+.chat-panel{width:280px;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;height:100vh;overflow:hidden}
 .chat-panel-header{padding:16px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .chat-panel-title{font-size:13px;font-weight:600;letter-spacing:-.1px;color:var(--text);font-family:'Geist',sans-serif;display:flex;align-items:center;gap:8px}
 .chat-panel-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
@@ -662,8 +662,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- SETUPS -->
 <div class="page" id="page-setups">
   <div class="page-header"><div><div class="page-title">Setup Analytics</div><div class="page-sub">Find your actual edge</div></div></div>
-    <button class="explainer-toggle" onclick="toggleExplainer('ex-setups')">Hide</button>
-  </div>
   <div class="grid2">
     <div class="card">
       <div class="card-header"><span class="card-title">Win rate by setup</span></div>
@@ -688,8 +686,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- MISTAKES -->
 <div class="page" id="page-mistakes">
   <div class="page-header"><div><div class="page-title">Mistake Tracker</div><div class="page-sub">What's actually costing you money</div></div></div>
-    <button class="explainer-toggle" onclick="toggleExplainer('ex-mistakes')">Hide</button>
-  </div>
   <div class="grid2">
     <div class="card">
       <div class="card-header"><span class="card-title">Cost per mistake (total $)</span></div>
@@ -707,8 +703,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   <div class="page-header">
     <div><div class="page-title">AI Insights</div><div class="page-sub">Pattern coaching across your full trade history</div></div>
     <button class="btn btn-green" onclick="runInsights()">Run analysis ↗</button>
-  </div>
-    <button class="explainer-toggle" onclick="toggleExplainer('ex-insights')">Hide</button>
   </div>
   <div id="insights-output"><div class="empty"><strong>No analysis yet</strong>Log at least 5 trades, then click "Run analysis" to get AI coaching on your patterns.</div></div>
 </div>
