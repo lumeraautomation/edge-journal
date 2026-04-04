@@ -350,6 +350,17 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .chat-panel.collapsed .chat-panel-header{justify-content:center;padding:16px 0}
 
 @media(max-width:1100px){.chat-panel{display:none}}
+/* MORE MENU */
+.more-toggle{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;font-family:'Geist',sans-serif;letter-spacing:-.1px;user-select:none}
+.more-toggle:hover{color:var(--text);background:var(--bg3)}
+.more-toggle svg{width:15px;height:15px;flex-shrink:0;opacity:.6}
+.more-toggle .more-chevron{margin-left:auto;font-size:10px;transition:transform .2s;opacity:.4}
+.more-toggle.open .more-chevron{transform:rotate(180deg)}
+.more-submenu{display:none;background:var(--bg);border-top:1px solid var(--border)}
+.more-submenu.open{display:block}
+.more-submenu .nav-item{padding-left:30px;font-size:12px}
+.nav-divider{height:1px;background:var(--border);margin:6px 12px}
+
 @media(max-width:900px){
   .sidebar{width:180px}
   .metrics{grid-template-columns:repeat(3,1fr)}
@@ -388,7 +399,8 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">EDGE<span>.</span><span class="logo-sub">Trading Journal</span></div>
-  <div class="nav-section">Main</div>
+
+  <!-- CORE 4 -->
   <div class="nav-item active" onclick="go('dashboard')">
     <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".8"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".8"/></svg>Dashboard
   </div>
@@ -398,7 +410,13 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   <div class="nav-item" onclick="go('history')">
     <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>History
   </div>
-  <div class="nav-section">Analytics</div>
+  <div class="nav-item" onclick="go('copilot')">
+    <svg viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0A6 6 0 012 8z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/></svg>AI Copilot
+  </div>
+
+  <div class="nav-divider"></div>
+
+  <!-- ANALYTICS QUICK LINKS -->
   <div class="nav-item" onclick="go('setups')">
     <svg viewBox="0 0 16 16" fill="none"><path d="M1 12l4-5 4 3 5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Setups
   </div>
@@ -406,35 +424,42 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 7v3M8 12v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Mistakes
   </div>
   <div class="nav-item" onclick="go('insights')">
-    <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="currentColor" opacity=".5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M11.1 4.9l-1.4 1.4M4.9 11.1l-1.4 1.4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>AI Insights
+    <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="currentColor" opacity=".5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>AI Insights
   </div>
-  <div class="nav-item" onclick="go('playbook')">
-    <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h4M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Playbook
+
+  <div class="nav-divider"></div>
+
+  <!-- MORE (collapsed by default) -->
+  <div class="more-toggle" onclick="toggleMore(this)">
+    <svg viewBox="0 0 16 16" fill="none"><circle cx="4" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12" cy="8" r="1.5" fill="currentColor"/></svg>
+    More
+    <span class="more-chevron">▼</span>
   </div>
-  <div class="nav-section">AI Coach</div>
-  <div class="nav-item" onclick="go('copilot')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0A6 6 0 012 8z" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v3l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/></svg>Trade Copilot
+  <div class="more-submenu" id="more-submenu">
+    <div class="nav-item" onclick="go('routine')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4M2 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Daily Routine
+    </div>
+    <div class="nav-item" onclick="go('rules')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M4 8l2.5 2.5L12 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3"/></svg>Rule Tracker
+    </div>
+    <div class="nav-item" onclick="go('tilt')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 2c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Tilt Detection
+    </div>
+    <div class="nav-item" onclick="go('risk')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 14V6l4-4h6l2 2v10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 14v-4h4v4" stroke="currentColor" stroke-width="1.3"/></svg>Risk Consistency
+    </div>
+    <div class="nav-item" onclick="go('streaks')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M9 2c0 3-3 4-3 7a4 4 0 008 0c0-4-5-7-5-7z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>Streaks
+    </div>
+    <div class="nav-item" onclick="go('playbook')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h4M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Playbook
+    </div>
+    <div class="nav-item" onclick="if(confirm('Delete ALL trades?')){state.trades=[];save();renderDashboard();}" style="color:var(--red)">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V2h4v2M5 4v9a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Clear trades
+    </div>
   </div>
-  <div class="nav-section">Discipline</div>
-  <div class="nav-item" onclick="go('routine')">
-    <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4M2 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Daily Routine
-  </div>
-  <div class="nav-item" onclick="go('rules')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M4 8l2.5 2.5L12 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3"/></svg>Rule Tracker
-  </div>
-  <div class="nav-item" onclick="go('tilt')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M8 2c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Tilt Detection
-  </div>
-  <div class="nav-item" onclick="go('risk')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M2 14V6l4-4h6l2 2v10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 14v-4h4v4" stroke="currentColor" stroke-width="1.3"/></svg>Risk Consistency
-  </div>
-  <div class="nav-item" onclick="go('streaks')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M9 2c0 3-3 4-3 7a4 4 0 008 0c0-4-5-7-5-7z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 10v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Streaks
-  </div>
-  <div class="nav-section">Data</div>
-  <div class="nav-item" onclick="if(confirm('Delete ALL trades? This cannot be undone.')){state.trades=[];save();renderDashboard();}" style="color:var(--red)">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V2h4v2M5 4v9a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Clear all trades
-  </div>
+
+  <div style="flex:1"></div>
   <div class="user-bar">
     <span class="sync-dot" id="sync-dot" title="Synced to cloud"></span>
     <img class="user-avatar" id="user-avatar" src="" alt="">
@@ -460,13 +485,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       <button class="btn btn-green" onclick="go('log')">+ Log trade</button>
     </div>
   </div>
-  <div class="page-explainer" id="ex-dashboard">
-    <span class="explainer-icon">📊</span>
-    <div class="explainer-content">
-      <div class="explainer-title">Your trading command center</div>
-      <div class="explainer-text">Everything you need at a glance. <strong>Log trades</strong> to populate your equity curve and stats. The <strong>Live Pattern Feed</strong> at the bottom auto-detects patterns in your trading as you log more trades — no manual analysis needed.</div>
-      <div class="tip-row"><span class="tip">📈 Equity curve updates after every trade</span><span class="tip">🔴 Live Pattern Feed needs 5+ trades</span><span class="tip">📅 Filter by Today / Week / Month</span></div>
-    </div>
     <button class="explainer-toggle" onclick="toggleExplainer('ex-dashboard')">Hide</button>
   </div>
 
@@ -548,13 +566,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   <div class="page-header">
     <div><div class="page-title">Log a Trade</div><div class="page-sub">Fast entry — under 10 seconds</div></div>
   </div>
-  <div class="page-explainer" id="ex-log">
-    <span class="explainer-icon">⚡</span>
-    <div class="explainer-content">
-      <div class="explainer-title">How to log a trade</div>
-      <div class="explainer-text"><strong>Quick entry (top bar):</strong> Fill in ticker, side, entry/exit price, quantity — hit <strong>Log + AI Review</strong>. Takes under 10 seconds. The AI instantly grades your trade A–F and auto-tags mistakes. <strong>Full entry (below):</strong> Add notes, setup tags, and mistake tags for deeper analysis. The more detail you add, the smarter your AI reviews become.</div>
-      <div class="tip-row"><span class="tip">🤖 AI auto-tags mistakes — no manual tagging needed</span><span class="tip">📥 Paste Tradovate CSV at the bottom to bulk import</span><span class="tip">🎯 Stop + Target unlock R:R tracking</span></div>
-    </div>
     <button class="explainer-toggle" onclick="toggleExplainer('ex-log')">Hide</button>
   </div>
 
@@ -623,13 +634,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div><div class="page-title">Trade History</div><div class="page-sub" id="history-count"></div></div>
     <button class="btn btn-green" onclick="go('log')">+ Log trade</button>
   </div>
-  <div class="page-explainer" id="ex-history">
-    <span class="explainer-icon">📋</span>
-    <div class="explainer-content">
-      <div class="explainer-title">All your trades in one place</div>
-      <div class="explainer-text"><strong>Click any row</strong> to open the full AI review for that trade. Use the <strong>filters</strong> to find patterns — e.g. filter by "Losses only" + a specific setup to see where a strategy is failing you. Grades (A–F) are assigned by AI based on execution quality, R:R, and rule adherence.</div>
-      <div class="tip-row"><span class="tip">🔍 Filter by setup, mistake, date, or result</span><span class="tip">🤖 Click any row for full AI review</span><span class="tip">🎓 Grades reflect execution quality, not just P&L</span></div>
-    </div>
     <button class="explainer-toggle" onclick="toggleExplainer('ex-history')">Hide</button>
   </div>
   <div class="filters">
@@ -657,13 +661,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- SETUPS -->
 <div class="page" id="page-setups">
   <div class="page-header"><div><div class="page-title">Setup Analytics</div><div class="page-sub">Find your actual edge</div></div></div>
-  <div class="page-explainer" id="ex-setups">
-    <span class="explainer-icon">📈</span>
-    <div class="explainer-content">
-      <div class="explainer-title">Which setups actually make you money?</div>
-      <div class="explainer-text">This page breaks down your P&L and win rate by every setup you've tagged. <strong>Your edge lives here.</strong> Most traders think they know their best setup — this page shows you the truth with data. Tag trades with setups on the Log page, and this fills in automatically.</div>
-      <div class="tip-row"><span class="tip">🏷️ Tag trades with setups when logging</span><span class="tip">📊 Needs 3+ trades per setup to be meaningful</span></div>
-    </div>
     <button class="explainer-toggle" onclick="toggleExplainer('ex-setups')">Hide</button>
   </div>
   <div class="grid2">
@@ -690,13 +687,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- MISTAKES -->
 <div class="page" id="page-mistakes">
   <div class="page-header"><div><div class="page-title">Mistake Tracker</div><div class="page-sub">What's actually costing you money</div></div></div>
-  <div class="page-explainer" id="ex-mistakes">
-    <span class="explainer-icon">⚠️</span>
-    <div class="explainer-content">
-      <div class="explainer-title">See exactly what's costing you money</div>
-      <div class="explainer-text">Every mistake tag you apply to a trade gets tracked here with its <strong>total dollar cost</strong> and frequency. This is one of the most powerful pages in the app — most traders lose money to the same 2-3 mistakes repeatedly without realizing it. The AI also auto-tags mistakes when it reviews your trades.</div>
-      <div class="tip-row"><span class="tip">🤖 AI auto-detects FOMO, revenge trading, overtrading</span><span class="tip">💸 Sort by cost to find your biggest leak</span></div>
-    </div>
     <button class="explainer-toggle" onclick="toggleExplainer('ex-mistakes')">Hide</button>
   </div>
   <div class="grid2">
@@ -717,13 +707,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div><div class="page-title">AI Insights</div><div class="page-sub">Pattern coaching across your full trade history</div></div>
     <button class="btn btn-green" onclick="runInsights()">Run analysis ↗</button>
   </div>
-  <div class="page-explainer" id="ex-insights">
-    <span class="explainer-icon">🧠</span>
-    <div class="explainer-content">
-      <div class="explainer-title">Your personal AI trading coach</div>
-      <div class="explainer-text">Click <strong>Run analysis</strong> and the AI scans your entire trade history to find patterns you can't see yourself — like "you lose 72% of trades after 11AM" or "your win rate doubles on Mech Model setups." Requires at least <strong>5 logged trades</strong> to generate meaningful insights. Run it weekly for best results.</div>
-      <div class="tip-row"><span class="tip">📊 Needs 5+ trades to analyze</span><span class="tip">🔄 Re-run weekly as you log more trades</span><span class="tip">💡 Insights reference your actual numbers</span></div>
-    </div>
     <button class="explainer-toggle" onclick="toggleExplainer('ex-insights')">Hide</button>
   </div>
   <div id="insights-output"><div class="empty"><strong>No analysis yet</strong>Log at least 5 trades, then click "Run analysis" to get AI coaching on your patterns.</div></div>
@@ -1102,7 +1085,7 @@ window._mergeCloudData = function(cloudData) {
 };
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const PAGE_ORDER = ['dashboard','log','history','setups','mistakes','insights','playbook','copilot','routine','rules','tilt','risk','streaks'];
+const PAGE_ORDER = ['dashboard','log','history','copilot','setups','mistakes','insights','routine','rules','tilt','risk','streaks','playbook'];
 function go(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -2300,6 +2283,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('chat-input');
   if (input) input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 100) + 'px'; });
 });
+
+// ─── MORE MENU TOGGLE ─────────────────────────────────────────────────────────
+function toggleMore(el) {
+  el.classList.toggle('open');
+  document.getElementById('more-submenu').classList.toggle('open');
+}
 
 // ─── PAGE EXPLAINERS ─────────────────────────────────────────────────────────
 function toggleExplainer(id) {
