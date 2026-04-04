@@ -73,8 +73,8 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .qe-title{font-size:11px;font-weight:700;color:var(--green);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px}
 .qe-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
 .qe-field{display:flex;flex-direction:column;gap:5px}
-.qe-field label{font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;font-weight:600}
-.qe-field input,.qe-field select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;font-size:13px;font-family:var(--mono);color:var(--text)}
+.qe-field label{font-size:12px;color:var(--muted);font-weight:500;font-family:'Geist',sans-serif}
+.qe-field input,.qe-field select{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:8px 11px;font-size:13px;font-family:'Geist Mono',monospace;color:var(--text);width:100%}
 .qe-field input:focus,.qe-field select:focus{outline:none;border-color:var(--green);background:var(--bg4)}
 .f-ticker{width:80px}.f-price{width:105px}.f-qty{width:70px}.f-dt{width:180px}.f-setup{width:150px}.f-fees{width:80px}
 
@@ -124,7 +124,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .modal-title{font-size:17px;font-weight:800;margin-bottom:18px;letter-spacing:-.3px}
 .modal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
-.modal-field label{font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+.modal-field label{font-size:12px;color:var(--muted);letter-spacing:.01em;font-weight:500;font-family:'Geist',sans-serif}
 .modal-field input,.modal-field select,.modal-field textarea{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:9px 11px;font-size:13px;font-family:var(--mono);color:var(--text);width:100%}
 .modal-field textarea{font-family:var(--display);font-size:13px;min-height:70px;resize:vertical;line-height:1.6}
 .modal-field input:focus,.modal-field select:focus,.modal-field textarea:focus{outline:none;border-color:var(--green)}
@@ -485,8 +485,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       <button class="btn btn-green" onclick="go('log')">+ Log trade</button>
     </div>
   </div>
-    <button class="explainer-toggle" onclick="toggleExplainer('ex-dashboard')">Hide</button>
-  </div>
 
   <div class="metrics">
     <div class="metric"><div class="metric-label">Total P&amp;L</div><div class="metric-val" id="m-pnl">$0</div><div class="metric-sub" id="m-pnl-sub">0 trades</div></div>
@@ -564,62 +562,67 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- LOG TRADE -->
 <div class="page" id="page-log">
   <div class="page-header">
-    <div><div class="page-title">Log a Trade</div><div class="page-sub">Fast entry — under 10 seconds</div></div>
-  </div>
-    <button class="explainer-toggle" onclick="toggleExplainer('ex-log')">Hide</button>
+    <div><div class="page-title">Log a Trade</div><div class="page-sub">Fill in the details and hit Log — AI reviews instantly</div></div>
   </div>
 
-  <div class="quick-entry">
-    <div class="qe-title">⚡ Quick entry</div>
-    <div class="qe-row">
-      <div class="qe-field f-ticker"><label>Ticker</label><input id="q-ticker" placeholder="NQ" value="NQ"></div>
-      <div class="qe-field"><label>Side</label>
-        <div class="side-toggle">
-          <button class="side-btn long-active" id="btn-long" onclick="setSide('long')">LONG</button>
-          <button class="side-btn" id="btn-short" onclick="setSide('short')">SHORT</button>
-        </div>
+  <!-- QUICK ENTRY FORM -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header" style="margin-bottom:16px">
+      <span class="card-title">Trade details</span>
+      <div class="side-toggle">
+        <button class="side-btn long-active" id="btn-long" onclick="setSide('long')">Long</button>
+        <button class="side-btn" id="btn-short" onclick="setSide('short')">Short</button>
       </div>
-      <div class="qe-field f-price"><label>Entry $</label><input id="q-entry" type="number" placeholder="21000"></div>
-      <div class="qe-field f-price"><label>Exit $</label><input id="q-exit" type="number" placeholder="21050"></div>
-      <div class="qe-field f-qty"><label>Qty</label><input id="q-qty" type="number" value="1"></div>
-      <div class="qe-field f-price"><label>Stop $</label><input id="q-sl" type="number" placeholder="20980"></div>
-      <div class="qe-field f-price"><label>Target $</label><input id="q-tp" type="number" placeholder="21080"></div>
-      <div class="qe-field f-fees"><label>Fees $</label><input id="q-fees" type="number" value="0"></div>
-      <div class="qe-field f-dt"><label>Date &amp; Time</label><input id="q-datetime" type="datetime-local"></div>
-      <div class="qe-field f-setup"><label>Setup</label><select id="q-setup"><option value="">— setup —</option></select></div>
-      <div style="display:flex;flex-direction:column;gap:5px;align-self:flex-end">
-        <button class="btn btn-green" onclick="quickLog()">Log + AI Review ↗</button>
-      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
+      <div class="qe-field"><label>Ticker</label><input id="q-ticker" placeholder="NQ" value="NQ"></div>
+      <div class="qe-field"><label>Entry $</label><input id="q-entry" type="number" placeholder="21000"></div>
+      <div class="qe-field"><label>Exit $</label><input id="q-exit" type="number" placeholder="21050"></div>
+      <div class="qe-field"><label>Qty</label><input id="q-qty" type="number" value="1"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
+      <div class="qe-field"><label>Stop $</label><input id="q-sl" type="number" placeholder="20980"></div>
+      <div class="qe-field"><label>Target $</label><input id="q-tp" type="number" placeholder="21080"></div>
+      <div class="qe-field"><label>Fees $</label><input id="q-fees" type="number" value="0"></div>
+      <div class="qe-field"><label>Setup</label><select id="q-setup"><option value="">— setup —</option></select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end">
+      <div class="qe-field"><label>Date &amp; Time</label><input id="q-datetime" type="datetime-local"></div>
+      <button class="btn btn-green" style="height:38px;padding:0 24px;font-size:13px" onclick="quickLog()">Log + AI Review ↗</button>
     </div>
   </div>
 
-  <div class="grid2">
+  <!-- NOTES + TAGS -->
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header" style="margin-bottom:16px"><span class="card-title">Notes &amp; tags</span><span class="card-sub">Optional — makes AI reviews smarter</span></div>
+    <div class="modal-field"><label>Trade notes / thesis</label><textarea id="full-notes" placeholder="What was the setup? Why did you take it? How did it play out?" style="min-height:80px"></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div class="modal-field" style="margin-bottom:0"><label>Setup tags</label><div class="tag-select" id="setup-tags" style="margin-top:6px"></div></div>
+      <div class="modal-field" style="margin-bottom:0"><label>Mistake tags</label><div class="tag-select" id="mistake-tags" style="margin-top:6px"></div></div>
+    </div>
+    <button class="btn btn-green" onclick="fullLog()" style="width:100%;justify-content:center">Save with notes + AI Review ↗</button>
+  </div>
+
+  <!-- MANAGE TAGS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     <div class="card">
-      <div class="card-header"><span class="card-title">Add notes &amp; tags</span><span class="card-sub">Optional but powerful</span></div>
-      <div class="modal-field"><label>Trade notes / thesis</label><textarea id="full-notes" placeholder="What was the setup? Why did you take it? How did it play out?"></textarea></div>
-      <div class="modal-field"><label>Setup tags</label><div class="tag-select" id="setup-tags"></div></div>
-      <div class="modal-field"><label>Mistake tags</label><div class="tag-select" id="mistake-tags"></div></div>
-      <button class="btn btn-green" onclick="fullLog()" style="width:100%;justify-content:center;margin-top:4px">Save with notes + AI Review ↗</button>
+      <div class="card-header"><span class="card-title">Setups</span><button class="btn btn-sm" onclick="addSetup()">+ Add</button></div>
+      <div id="setup-manage"></div>
     </div>
-    <div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">Setups</span><button class="btn btn-sm" onclick="addSetup()">+ Add</button></div>
-        <div id="setup-manage"></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">Mistake tags</span><button class="btn btn-sm" onclick="addMistake()">+ Add</button></div>
-        <div id="mistake-manage"></div>
-      </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Mistake tags</span><button class="btn btn-sm" onclick="addMistake()">+ Add</button></div>
+      <div id="mistake-manage"></div>
     </div>
   </div>
 
+  <!-- CSV IMPORT -->
   <div class="card">
     <div class="card-header">
       <span class="card-title">Import from Tradovate CSV</span>
       <button class="btn btn-sm" onclick="loadDemo()">Load demo data</button>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.7">Export your fills from Tradovate and paste below. Looks for: <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">side</code>, <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">avgFillPrice</code>, <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">qty</code>, <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">filledTime</code>, <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">name</code>, <code style="background:var(--bg3);padding:1px 5px;border-radius:3px;font-size:11px">status</code></p>
-    <textarea id="csv-raw" style="width:100%;min-height:100px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:11px;font-family:var(--mono);color:var(--text);resize:vertical" placeholder="Paste CSV here..."></textarea>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Export your fills from Tradovate and paste below. Columns needed: <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">side</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">avgFillPrice</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">qty</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">filledTime</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">name</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">status</code></p>
+    <textarea id="csv-raw" style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:12px;font-family:var(--mono);color:var(--text);resize:vertical" placeholder="Paste CSV here..."></textarea>
     <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
       <button class="btn btn-green" onclick="parseCSV()">Parse &amp; preview ↗</button>
       <span id="csv-feedback" style="font-size:12px;color:var(--muted)"></span>
@@ -633,8 +636,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   <div class="page-header">
     <div><div class="page-title">Trade History</div><div class="page-sub" id="history-count"></div></div>
     <button class="btn btn-green" onclick="go('log')">+ Log trade</button>
-  </div>
-    <button class="explainer-toggle" onclick="toggleExplainer('ex-history')">Hide</button>
   </div>
   <div class="filters">
     <input class="filter-input" id="f-ticker" placeholder="Ticker..." onkeyup="renderHistory()" style="width:90px">
