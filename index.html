@@ -2661,26 +2661,40 @@ function renderOnboardStep(){
 
 function saveCurrentOnboardStep() {
   const slide = onboardSlides[onboardStep];
-  if (!slide.interactive) return;
+  if (!slide || !slide.interactive) return;
   const tmpl = GRADING_TEMPLATES[slide.interactive];
+  if (!tmpl) return;
   const gc = state.gradingCriteria;
 
-  if (tmpl.type === 'textarea') {
-    const val = document.getElementById('ob-input')?.value?.trim();
-    if (val) gc[tmpl.key] = val;
-  } else if (tmpl.type === 'select') {
-    const sel = document.getElementById('ob-select')?.value;
-    gc[tmpl.key] = sel;
-    if (sel === 'Custom') gc.minRRCustom = document.getElementById('ob-custom')?.value?.trim();
-  } else if (tmpl.type === 'time') {
-    tmpl.fields.forEach(f => {
-      const val = document.getElementById(f.id)?.value;
-      if (val) gc[f.key] = val;
-    });
-  } else if (tmpl.type === 'multicheck') {
-    gc[tmpl.key] = tmpl.options.filter(o => document.getElementById('ob-chk-'+o.replace(/\s/g,'_'))?.checked);
+  try {
+    if (tmpl.type === 'textarea') {
+      const el = document.getElementById('ob-input');
+      if (el && el.value.trim()) gc[tmpl.key] = el.value.trim();
+    } else if (tmpl.type === 'select') {
+      const sel = document.getElementById('ob-select');
+      if (sel) {
+        gc[tmpl.key] = sel.value;
+        if (sel.value === 'Custom') {
+          const custom = document.getElementById('ob-custom');
+          if (custom) gc.minRRCustom = custom.value.trim();
+        }
+      }
+    } else if (tmpl.type === 'time') {
+      tmpl.fields.forEach(f => {
+        const el = document.getElementById(f.id);
+        if (el && el.value) gc[f.key] = el.value;
+      });
+    } else if (tmpl.type === 'multicheck') {
+      gc[tmpl.key] = tmpl.options.filter(o => {
+        const el = document.getElementById('ob-chk-' + o.replace(/\s/g, '_'));
+        return el && el.checked;
+      });
+    }
+    save();
+  } catch(e) {
+    // Don't let a save error block navigation
+    console.warn('saveCurrentOnboardStep error:', e);
   }
-  save();
 }
 
 function onboardNav(dir){
