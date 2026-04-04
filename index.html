@@ -142,7 +142,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:1.6}
 .empty strong{color:var(--dim);display:block;margin-bottom:6px}
 
-.grade-badge{font-size:14px;font-weight:800;font-family:var(--mono);min-width:28px;text-align:center}
+.grade-badge{font-size:22px;font-weight:800;font-family:'Geist Mono',monospace;min-width:36px;text-align:center;letter-spacing:-1px;line-height:1}
 .grade-A{color:var(--green)}
 .grade-B{color:#5ecfff}
 .grade-C{color:var(--amber)}
@@ -213,7 +213,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 /* AUTO-REVIEW CARD */
 .review-card{background:var(--bg3);border-radius:var(--r2);overflow:hidden;margin-top:12px}
 .review-grade-bar{padding:14px 16px;display:flex;align-items:center;gap:14px}
-.grade-circle{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;font-family:var(--mono);flex-shrink:0}
+.grade-circle{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;font-family:'Geist Mono',monospace;flex-shrink:0}
 .grade-A-bg{background:rgba(0,208,132,.15);border:2px solid #00d084;color:#00d084}
 .grade-B-bg{background:rgba(74,158,255,.15);border:2px solid #4a9eff;color:#4a9eff}
 .grade-C-bg{background:rgba(245,166,35,.15);border:2px solid #f5a623;color:#f5a623}
@@ -693,7 +693,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div style="overflow-x:auto">
       <table class="trades-table">
         <thead><tr>
-          <th>Date / Time</th><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>Fees</th><th>P&amp;L</th><th>Outcome</th><th>R:R</th><th>Setup</th><th>Mistakes</th><th>Grade</th><th></th>
+          <th>Date / Time</th><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>Fees</th><th>P&amp;L</th><th>Outcome</th><th>R:R</th><th>Setup</th><th>Mistakes</th><th style="text-align:center;color:var(--text)">Grade</th><th></th>
         </tr></thead>
         <tbody id="history-body"></tbody>
       </table>
@@ -1297,7 +1297,7 @@ function renderRecent() {
       <span class="side-pill ${t.side==='long'?'long-pill':'short-pill'}">${t.side.toUpperCase()}</span>
       <span style="font-size:13px;font-weight:700">${t.ticker}</span>
       <span style="font-size:11px;color:var(--muted);flex:1">${t.datetime?t.datetime.slice(0,10):''}</span>
-      ${t.grade?`<span class="grade-badge grade-${t.grade}">${t.grade}</span>`:''}
+      ${t.grade?`<span class="grade-badge grade-${t.grade}" style="font-size:20px">${t.grade}</span>`:''}
       <span style="font-size:13px;font-weight:700;font-family:var(--mono)" class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</span>
     </div>`;
   }).join('');
@@ -1500,7 +1500,7 @@ function openTradeModal(idx,loading) {
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
       <div class="stat-card"><div class="stat-card-val ${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</div><div class="stat-card-label">P&L</div></div>
       <div class="stat-card"><div class="stat-card-val">${rr?rr+'R':'—'}</div><div class="stat-card-label">Planned R:R</div></div>
-      <div class="stat-card"><div class="stat-card-val grade-badge ${t.grade?'grade-'+t.grade:''}">${t.grade||'—'}</div><div class="stat-card-label">AI Grade</div></div>
+      <div class="stat-card"><div class="stat-card-val grade-badge ${t.grade?'grade-'+t.grade:''}" style="font-size:48px;letter-spacing:-2px;line-height:1">${t.grade||'—'}</div><div class="stat-card-label">AI Grade</div></div>
     </div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em">Execution</div>
     <div style="font-size:13px;font-family:var(--mono);background:var(--bg3);border-radius:var(--r);padding:10px 12px;margin-bottom:12px;line-height:1.8">
@@ -1572,7 +1572,7 @@ function renderHistory() {
       <td style="color:var(--muted)">${rr?rr+'R':'—'}</td>
       <td>${(t.setups||[]).map(s=>`<span class="tag-pill setup-pill">${s}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
       <td>${(t.mistakes||[]).map(m=>`<span class="tag-pill mistake-pill">${m}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
-      <td>${t.grade?`<span class="grade-badge grade-${t.grade}">${t.grade}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
+      <td style="text-align:center">${t.grade?`<span class="grade-badge grade-${t.grade}">${t.grade}</span>`:'<span style="color:var(--dim);font-size:18px;font-weight:700">—</span>'}</td>
       <td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openTradeModal(${idx})">Review</button></td>
     </tr>`;
   }).join('');
@@ -2830,7 +2830,7 @@ function renderGallery() {
         <div class="gallery-meta">
           <span class="side-pill ${t.side==='long'?'long-pill':'short-pill'}">${t.side.toUpperCase()}</span>
           <strong style="font-size:13px">${t.ticker}</strong>
-          ${t.grade ? `<span class="grade-badge grade-${t.grade}" style="font-size:12px">${t.grade}</span>` : ''}
+          ${t.grade ? `<span class="grade-badge grade-${t.grade}" style="font-size:20px">${t.grade}</span>` : ''}
           ${outcomeLabel ? `<span class="tag-pill ${outcomeClass}">${outcomeLabel}</span>` : ''}
           <span style="font-size:11px;color:var(--muted);margin-left:auto">${t.datetime?t.datetime.slice(0,10):''}</span>
         </div>
