@@ -963,10 +963,10 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       <div id="onboard-content"></div>
     </div>
     <div class="onboard-footer">
-      <button class="onboard-skip" onclick="skipOnboard()">Skip tour</button>
+      <button class="onboard-skip" id="ob-skip-btn">Skip tour</button>
       <div style="display:flex;gap:8px">
-        <button class="btn btn-sm" id="onboard-back" onclick="onboardNav(-1)" style="display:none">← Back</button>
-        <button class="btn btn-green" id="onboard-next" onclick="onboardNav(1)">Next →</button>
+        <button class="btn btn-sm" id="onboard-back" style="display:none">← Back</button>
+        <button class="btn btn-green" id="onboard-next">Next →</button>
       </div>
     </div>
   </div>
@@ -2697,7 +2697,12 @@ function skipOnboard(){
 }
 window.onboardNav = onboardNav;
 window.skipOnboard = skipOnboard;
-window._showOnboardIfNew=showOnboard;
+window._showOnboardIfNew = showOnboard;
+
+// Wire buttons via event listeners (safe — no inline onclick scope issues)
+document.getElementById('ob-skip-btn').addEventListener('click', skipOnboard);
+document.getElementById('onboard-back').addEventListener('click', () => onboardNav(-1));
+document.getElementById('onboard-next').addEventListener('click', () => onboardNav(1));
 
 function openGradingSettings() {
   // Jump straight to the grading slides (skip welcome slide)
