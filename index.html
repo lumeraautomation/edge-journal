@@ -2635,9 +2635,8 @@ function renderOnboardStep(){
       interactiveHTML = `<textarea id="ob-input" style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:13px;font-family:'Geist',sans-serif;color:var(--text);resize:vertical;line-height:1.6;margin-top:10px" placeholder="${tmpl.placeholder}">${gc[tmpl.key]||''}</textarea>`;
     } else if (tmpl.type === 'select') {
       const opts = tmpl.options.map(o=>`<option value="${o}" ${gc[tmpl.key]===o?'selected':''}>${o}</option>`).join('');
-      interactiveHTML = `<select id="ob-select" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:14px;color:var(--text);margin-top:10px">${opts}</select>
-        <input id="ob-custom" type="text" placeholder="e.g. 1.8" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:13px;color:var(--text);margin-top:8px;display:${gc[tmpl.key]==='Custom'?'block':'none'}" value="${gc.minRRCustom||''}">
-        <script>document.getElementById('ob-select').addEventListener('change',function(){document.getElementById('ob-custom').style.display=this.value==='Custom'?'block':'none'});<\/script>`;
+      interactiveHTML = `<select id="ob-select" onchange="document.getElementById('ob-custom').style.display=this.value==='Custom'?'block':'none'" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:14px;color:var(--text);margin-top:10px">${opts}</select>
+        <input id="ob-custom" type="text" placeholder="e.g. 1.8" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:13px;color:var(--text);margin-top:8px;display:${gc[tmpl.key]==='Custom'?'block':'none'}" value="${gc.minRRCustom||''}">`;
     } else if (tmpl.type === 'time') {
       interactiveHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
         ${tmpl.fields.map(f=>`<div><label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px">${f.label}</label><input id="${f.id}" type="time" placeholder="${f.placeholder}" value="${gc[f.key]||''}" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:9px;font-size:14px;color:var(--text);font-family:'Geist Mono',monospace"></div>`).join('')}
@@ -2696,6 +2695,8 @@ function skipOnboard(){
   localStorage.setItem(ONBOARD_KEY,'1');
   document.getElementById('onboard-overlay').style.display='none';
 }
+window.onboardNav = onboardNav;
+window.skipOnboard = skipOnboard;
 window._showOnboardIfNew=showOnboard;
 
 function openGradingSettings() {
