@@ -101,6 +101,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .tag-pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:4px;background:var(--bg4);color:var(--muted);border:1px solid var(--border);margin:1px 1px;font-family:var(--display);font-weight:600}
 .mistake-pill{background:var(--red-dim);color:var(--red);border-color:var(--red-border)}
 .setup-pill{background:var(--blue-dim);color:var(--blue);border-color:#4a9eff30}
+.amber-pill{background:var(--amber-dim);color:var(--amber);border:1px solid #f5a62340}
 
 .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .filter-input{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:7px 11px;font-size:12px;font-family:var(--display);color:var(--text)}
@@ -588,6 +589,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       <div class="qe-field"><label>Setup</label><select id="q-setup"><option value="">— setup —</option></select></div>
+      <div class="qe-field"><label>Outcome</label>
+        <select id="q-outcome">
+          <option value="">— outcome —</option>
+          <option value="win">Win</option>
+          <option value="loss">Loss</option>
+          <option value="be_win">BE → Win</option>
+          <option value="be_loss">BE → Loss</option>
+        </select>
+      </div>
     </div>
 
     <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
@@ -649,7 +659,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div style="overflow-x:auto">
       <table class="trades-table">
         <thead><tr>
-          <th>Date / Time</th><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>Fees</th><th>P&amp;L</th><th>R:R</th><th>Setup</th><th>Mistakes</th><th>Grade</th><th></th>
+          <th>Date / Time</th><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>Fees</th><th>P&amp;L</th><th>Outcome</th><th>R:R</th><th>Setup</th><th>Mistakes</th><th>Grade</th><th></th>
         </tr></thead>
         <tbody id="history-body"></tbody>
       </table>
@@ -1253,11 +1263,12 @@ function buildTrade(withNotes) {
   const fees=parseFloat(document.getElementById('q-fees').value)||0;
   const datetime=document.getElementById('q-datetime').value;
   const setup=document.getElementById('q-setup').value;
+  const outcome=document.getElementById('q-outcome').value;
   if(!entry||!exit){alert('Entry and exit price required');return null;}
   const setups=withNotes?[...state.selectedSetups]:(setup?[setup]:[]);
   const mistakes=withNotes?[...state.selectedMistakes]:[];
   const notes=withNotes?(document.getElementById('full-notes').value||''):'';
-  return {ticker,side:state.selectedSide,entry,exit,qty,sl,tp,fees,datetime,setups,mistakes,notes,grade:null,review:null};
+  return {ticker,side:state.selectedSide,entry,exit,qty,sl,tp,fees,datetime,outcome,setups,mistakes,notes,grade:null,review:null};
 }
 
 function quickLog(){const t=buildTrade(false);if(!t)return;state.trades.push(t);save();document.getElementById('q-entry').value='';document.getElementById('q-exit').value='';reviewTrade(state.trades.length-1);}
@@ -1307,7 +1318,7 @@ Rules: Only 9:30–11:00 EST. Always wait for inversion FVG. Targets = low-resis
 THIS TRADE:
 ${t.ticker} ${t.side.toUpperCase()} | ${t.datetime||'unknown'} | Entry:${t.entry} Exit:${t.exit} Qty:${t.qty}
 Stop:${t.sl||'none'} Target:${t.tp||'none'} P&L:$${Math.round(pnl)} R:R:${rr||'?'}
-Pre-tagged setups: ${t.setups?.join(',')||'none'} | Pre-tagged mistakes: ${t.mistakes?.join(',')||'none'}
+Pre-tagged setups: ${t.setups?.join(',')||'none'} | Pre-tagged mistakes: ${t.mistakes?.join(',')||'none'} | Outcome: ${t.outcome?{win:'Win',loss:'Loss',be_win:'BE → Win',be_loss:'BE → Loss'}[t.outcome]:'not specified'}
 Notes: ${t.notes||'none'}
 ${histContext}
 
@@ -1405,6 +1416,7 @@ function openTradeModal(idx,loading) {
       Stop: ${t.sl||'—'} &nbsp;·&nbsp; Target: ${t.tp||'—'} &nbsp;·&nbsp; ${t.datetime?t.datetime.replace('T',' ').slice(0,16):''}
     </div>
     ${t.setups?.length?`<div style="margin-bottom:8px">${t.setups.map(s=>`<span class="tag-pill setup-pill">${s}</span>`).join('')}</div>`:''}
+    ${t.outcome?`<div style="margin-bottom:8px"><span class="tag-pill ${t.outcome==='win'?'setup-pill':t.outcome==='loss'?'mistake-pill':'amber-pill'}">${{win:'Win',loss:'Loss',be_win:'BE → Win',be_loss:'BE → Loss'}[t.outcome]||t.outcome}</span></div>`:''}
     ${t.mistakes?.length?`<div style="margin-bottom:10px">${t.mistakes.map(m=>`<span class="tag-pill mistake-pill">${m}</span>`).join('')}</div>`:''}
     ${t.notes?`<div style="font-size:13px;color:var(--muted);background:var(--bg3);border-radius:var(--r);padding:12px;margin-bottom:12px;line-height:1.6;border-left:3px solid var(--border2)">${t.notes}</div>`:''}
     <div id="modal-review-${idx}">${
@@ -1463,6 +1475,7 @@ function renderHistory() {
       <td>${t.qty}</td>
       <td style="color:var(--muted)">$${t.fees||0}</td>
       <td><strong class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</strong></td>
+      <td>${t.outcome?`<span class="tag-pill ${t.outcome==='win'?'setup-pill':t.outcome==='loss'?'mistake-pill':'amber-pill'}">${{win:'Win',loss:'Loss',be_win:'BE → Win',be_loss:'BE → Loss'}[t.outcome]}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
       <td style="color:var(--muted)">${rr?rr+'R':'—'}</td>
       <td>${(t.setups||[]).map(s=>`<span class="tag-pill setup-pill">${s}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
       <td>${(t.mistakes||[]).map(m=>`<span class="tag-pill mistake-pill">${m}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
