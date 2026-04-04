@@ -1433,7 +1433,7 @@ For auto_behaviors describe what you detect: Clean execution, Revenge trade susp
 For flags add specific warnings like: "Risked 2.3x your average", "Traded outside 9:30-11:00 window", "Entry 8 min after a loss".`;
 
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const raw=data.content?.map(b=>b.text||'').join('')||'';
     let parsed;
@@ -1784,8 +1784,9 @@ Cover: best time of day, best/worst setup, most costly mistake, a behavioral pat
 Be specific with numbers and use ICT terminology (FVG, sweep, inversion, LRLR). Under 60 words per insight.`;
 
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
+    if(data.error){document.getElementById('insights-output').innerHTML=`<div class="empty"><strong>API Error</strong>${data.error.message}</div>`;return;}
     const text=data.content?.map(b=>b.text||'').join('')||'';
     const lines=text.split('\n').filter(l=>l.trim()&&(l.includes('[')));
     const colorMap={STRENGTH:'#00d084',WEAKNESS:'#ff4d4d',PATTERN:'#4a9eff',COST:'#ff4d4d',ACTION:'#f5a623'};
@@ -1794,7 +1795,7 @@ Be specific with numbers and use ICT terminology (FVG, sweep, inversion, LRLR). 
       const col=colorMap[tag]||'var(--muted)';
       return `<div class="insight-box" style="border-left-color:${col}"><span class="insight-dot" style="background:${col}"></span>${l}</div>`;
     }).join('')||'<div class="empty">No structured insights returned. Try again.</div>';
-  } catch(e){document.getElementById('insights-output').innerHTML='<div class="empty"><strong>Analysis failed</strong>Check your internet connection.</div>';}
+  } catch(e){document.getElementById('insights-output').innerHTML=`<div class="empty"><strong>Failed:</strong> ${e.message}</div>`;}
 }
 
 // ─── PLAYBOOK ─────────────────────────────────────────────────────────────────
@@ -2011,7 +2012,7 @@ Respond in this EXACT JSON format only:
 verdict must be: GO, CAUTION, or NO. Use trader terminology (FVG, sweep, inversion, LRLR). Be direct and data-driven.`;
 
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
     const raw=data.content?.map(b=>b.text||'').join('')||'';
     let d;try{d=JSON.parse(raw.match(/\{[\s\S]*\}/)?.[0]||'{}');}catch(e){d={};}
@@ -2256,13 +2257,14 @@ Look for: revenge trades (rapid entries after losses), overtrading, size spikes 
 
 Give 3-4 specific findings with exact numbers. Start each with [TILT], [RISK], or [STRENGTH]. Be direct and specific. Under 50 words each.`;
   try {
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});
     const data=await res.json();
+    if(data.error){document.getElementById('tilt-output').innerHTML=`<div class="empty"><strong>API Error</strong> ${data.error.message}</div>`;return;}
     const text=data.content?.map(b=>b.text||'').join('')||'';
     const lines=text.split('\n').filter(l=>l.trim()&&l.includes('['));
     const colorMap={TILT:'#ff4d4d',RISK:'#f5a623',STRENGTH:'#00d084'};
-    document.getElementById('tilt-output').innerHTML=lines.map(l=>{const tag=l.match(/\[(\w+)\]/)?.[1]||'';const col=colorMap[tag]||'var(--muted)';return `<div class="insight-box" style="border-left-color:${col}"><span class="insight-dot" style="background:${col}"></span>${l}</div>`;}).join('');
-  } catch(e){document.getElementById('tilt-output').innerHTML='<div class="empty">Analysis failed. Check connection.</div>';}
+    document.getElementById('tilt-output').innerHTML=lines.map(l=>{const tag=l.match(/\[(\w+)\]/)?.[1]||'';const col=colorMap[tag]||'var(--muted)';return `<div class="insight-box" style="border-left-color:${col}"><span class="insight-dot" style="background:${col}"></span>${l}</div>`;}).join('')||'<div class="empty">No patterns found. Log more trades.</div>';
+  } catch(e){document.getElementById('tilt-output').innerHTML=`<div class="empty"><strong>Failed:</strong> ${e.message}</div>`;}
 }
 
 // ─── RISK CONSISTENCY ─────────────────────────────────────────────────────────
@@ -2483,7 +2485,7 @@ RULES: Be concise (under 120 words). Use the trader's own terminology (FVG, swee
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 300,
@@ -2492,12 +2494,16 @@ RULES: Be concise (under 120 words). Use the trader's own terminology (FVG, swee
       })
     });
     const data = await res.json();
+    if (data.error) {
+      thinkingEl.querySelector('.chat-bubble').textContent = `API Error: ${data.error.message}`;
+      return;
+    }
     const reply = data.content?.map(b => b.text || '').join('') || 'Something went wrong. Try again.';
     chatHistory.push({ role: 'assistant', content: reply });
     thinkingEl.querySelector('.chat-bubble').textContent = reply;
     thinkingEl.querySelector('.chat-bubble').classList.remove('thinking');
   } catch (e) {
-    thinkingEl.querySelector('.chat-bubble').textContent = 'Connection error. Check your internet.';
+    thinkingEl.querySelector('.chat-bubble').textContent = `Failed: ${e.message}`;
   }
 
   document.getElementById('chat-messages').scrollTop = 999999;
