@@ -279,6 +279,44 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0}
 .sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
 
+/* ONBOARDING */
+.onboard-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:8000;display:flex;align-items:center;justify-content:center}
+.onboard-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);width:560px;max-width:94vw;overflow:hidden;position:relative}
+.onboard-top{padding:28px 28px 0}
+.onboard-steps{display:flex;gap:6px;margin-bottom:20px}
+.onboard-step-dot{height:3px;border-radius:2px;flex:1;background:var(--border2);transition:background .3s}
+.onboard-step-dot.active{background:var(--green)}
+.onboard-step-dot.done{background:var(--green);opacity:.4}
+.onboard-icon{font-size:32px;margin-bottom:10px}
+.onboard-title{font-size:20px;font-weight:800;letter-spacing:-.3px;margin-bottom:8px}
+.onboard-body{font-size:13px;color:var(--muted);line-height:1.75;margin-bottom:20px}
+.onboard-body strong{color:var(--text)}
+.onboard-footer{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-top:1px solid var(--border);background:var(--bg3)}
+.onboard-skip{font-size:12px;color:var(--dim);cursor:pointer;background:none;border:none;font-family:var(--display)}
+.onboard-skip:hover{color:var(--muted)}
+
+/* PAGE EXPLAINER BANNER */
+.page-explainer{background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:var(--r);padding:12px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
+.page-explainer.collapsed{padding:8px 16px}
+.explainer-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.explainer-content{flex:1}
+.explainer-title{font-size:12px;font-weight:700;color:var(--green);letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}
+.explainer-text{font-size:12px;color:var(--muted);line-height:1.65}
+.explainer-text strong{color:var(--text)}
+.explainer-toggle{font-size:11px;color:var(--dim);cursor:pointer;background:none;border:none;font-family:var(--display);white-space:nowrap;margin-top:2px}
+.explainer-toggle:hover{color:var(--muted)}
+.tip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.tip{font-size:11px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 9px;color:var(--muted)}
+
+/* CHECKLIST ONBOARD */
+.onboard-checklist{list-style:none;margin-bottom:16px}
+.onboard-checklist li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;cursor:pointer}
+.onboard-checklist li:last-child{border-bottom:none}
+.onboard-checklist li .oc-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
+.onboard-checklist li.oc-done .oc-check{background:var(--green);border-color:var(--green);color:#000}
+.onboard-checklist li .oc-label{flex:1}
+.onboard-checklist li .oc-action{font-size:11px;color:var(--green);font-weight:700}
+
 @media(max-width:900px){
   .sidebar{width:180px}
   .metrics{grid-template-columns:repeat(3,1fr)}
@@ -389,6 +427,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       <button class="btn btn-green" onclick="go('log')">+ Log trade</button>
     </div>
   </div>
+  <div class="page-explainer" id="ex-dashboard">
+    <span class="explainer-icon">📊</span>
+    <div class="explainer-content">
+      <div class="explainer-title">Your trading command center</div>
+      <div class="explainer-text">Everything you need at a glance. <strong>Log trades</strong> to populate your equity curve and stats. The <strong>Live Pattern Feed</strong> at the bottom auto-detects patterns in your trading as you log more trades — no manual analysis needed.</div>
+      <div class="tip-row"><span class="tip">📈 Equity curve updates after every trade</span><span class="tip">🔴 Live Pattern Feed needs 5+ trades</span><span class="tip">📅 Filter by Today / Week / Month</span></div>
+    </div>
+    <button class="explainer-toggle" onclick="toggleExplainer('ex-dashboard')">Hide</button>
+  </div>
 
   <div class="metrics">
     <div class="metric"><div class="metric-label">Total P&amp;L</div><div class="metric-val" id="m-pnl">$0</div><div class="metric-sub" id="m-pnl-sub">0 trades</div></div>
@@ -468,6 +515,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   <div class="page-header">
     <div><div class="page-title">Log a Trade</div><div class="page-sub">Fast entry — under 10 seconds</div></div>
   </div>
+  <div class="page-explainer" id="ex-log">
+    <span class="explainer-icon">⚡</span>
+    <div class="explainer-content">
+      <div class="explainer-title">How to log a trade</div>
+      <div class="explainer-text"><strong>Quick entry (top bar):</strong> Fill in ticker, side, entry/exit price, quantity — hit <strong>Log + AI Review</strong>. Takes under 10 seconds. The AI instantly grades your trade A–F and auto-tags mistakes. <strong>Full entry (below):</strong> Add notes, setup tags, and mistake tags for deeper analysis. The more detail you add, the smarter your AI reviews become.</div>
+      <div class="tip-row"><span class="tip">🤖 AI auto-tags mistakes — no manual tagging needed</span><span class="tip">📥 Paste Tradovate CSV at the bottom to bulk import</span><span class="tip">🎯 Stop + Target unlock R:R tracking</span></div>
+    </div>
+    <button class="explainer-toggle" onclick="toggleExplainer('ex-log')">Hide</button>
+  </div>
 
   <div class="quick-entry">
     <div class="qe-title">⚡ Quick entry</div>
@@ -534,6 +590,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div><div class="page-title">Trade History</div><div class="page-sub" id="history-count"></div></div>
     <button class="btn btn-green" onclick="go('log')">+ Log trade</button>
   </div>
+  <div class="page-explainer" id="ex-history">
+    <span class="explainer-icon">📋</span>
+    <div class="explainer-content">
+      <div class="explainer-title">All your trades in one place</div>
+      <div class="explainer-text"><strong>Click any row</strong> to open the full AI review for that trade. Use the <strong>filters</strong> to find patterns — e.g. filter by "Losses only" + a specific setup to see where a strategy is failing you. Grades (A–F) are assigned by AI based on execution quality, R:R, and rule adherence.</div>
+      <div class="tip-row"><span class="tip">🔍 Filter by setup, mistake, date, or result</span><span class="tip">🤖 Click any row for full AI review</span><span class="tip">🎓 Grades reflect execution quality, not just P&L</span></div>
+    </div>
+    <button class="explainer-toggle" onclick="toggleExplainer('ex-history')">Hide</button>
+  </div>
   <div class="filters">
     <input class="filter-input" id="f-ticker" placeholder="Ticker..." onkeyup="renderHistory()" style="width:90px">
     <select class="filter-input" id="f-side" onchange="renderHistory()"><option value="">All sides</option><option value="long">Long</option><option value="short">Short</option></select>
@@ -559,6 +624,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- SETUPS -->
 <div class="page" id="page-setups">
   <div class="page-header"><div><div class="page-title">Setup Analytics</div><div class="page-sub">Find your actual edge</div></div></div>
+  <div class="page-explainer" id="ex-setups">
+    <span class="explainer-icon">📈</span>
+    <div class="explainer-content">
+      <div class="explainer-title">Which setups actually make you money?</div>
+      <div class="explainer-text">This page breaks down your P&L and win rate by every setup you've tagged. <strong>Your edge lives here.</strong> Most traders think they know their best setup — this page shows you the truth with data. Tag trades with setups on the Log page, and this fills in automatically.</div>
+      <div class="tip-row"><span class="tip">🏷️ Tag trades with setups when logging</span><span class="tip">📊 Needs 3+ trades per setup to be meaningful</span></div>
+    </div>
+    <button class="explainer-toggle" onclick="toggleExplainer('ex-setups')">Hide</button>
+  </div>
   <div class="grid2">
     <div class="card">
       <div class="card-header"><span class="card-title">Win rate by setup</span></div>
@@ -583,6 +657,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- MISTAKES -->
 <div class="page" id="page-mistakes">
   <div class="page-header"><div><div class="page-title">Mistake Tracker</div><div class="page-sub">What's actually costing you money</div></div></div>
+  <div class="page-explainer" id="ex-mistakes">
+    <span class="explainer-icon">⚠️</span>
+    <div class="explainer-content">
+      <div class="explainer-title">See exactly what's costing you money</div>
+      <div class="explainer-text">Every mistake tag you apply to a trade gets tracked here with its <strong>total dollar cost</strong> and frequency. This is one of the most powerful pages in the app — most traders lose money to the same 2-3 mistakes repeatedly without realizing it. The AI also auto-tags mistakes when it reviews your trades.</div>
+      <div class="tip-row"><span class="tip">🤖 AI auto-detects FOMO, revenge trading, overtrading</span><span class="tip">💸 Sort by cost to find your biggest leak</span></div>
+    </div>
+    <button class="explainer-toggle" onclick="toggleExplainer('ex-mistakes')">Hide</button>
+  </div>
   <div class="grid2">
     <div class="card">
       <div class="card-header"><span class="card-title">Cost per mistake (total $)</span></div>
@@ -601,7 +684,16 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div><div class="page-title">AI Insights</div><div class="page-sub">Pattern coaching across your full trade history</div></div>
     <button class="btn btn-green" onclick="runInsights()">Run analysis ↗</button>
   </div>
-  <div id="insights-output"><div class="empty"><strong>No analysis yet</strong>Log at least 3 trades, then click "Run analysis" to get AI coaching on your patterns.</div></div>
+  <div class="page-explainer" id="ex-insights">
+    <span class="explainer-icon">🧠</span>
+    <div class="explainer-content">
+      <div class="explainer-title">Your personal AI trading coach</div>
+      <div class="explainer-text">Click <strong>Run analysis</strong> and the AI scans your entire trade history to find patterns you can't see yourself — like "you lose 72% of trades after 11AM" or "your win rate doubles on Mech Model setups." Requires at least <strong>5 logged trades</strong> to generate meaningful insights. Run it weekly for best results.</div>
+      <div class="tip-row"><span class="tip">📊 Needs 5+ trades to analyze</span><span class="tip">🔄 Re-run weekly as you log more trades</span><span class="tip">💡 Insights reference your actual numbers</span></div>
+    </div>
+    <button class="explainer-toggle" onclick="toggleExplainer('ex-insights')">Hide</button>
+  </div>
+  <div id="insights-output"><div class="empty"><strong>No analysis yet</strong>Log at least 5 trades, then click "Run analysis" to get AI coaching on your patterns.</div></div>
 </div>
 
 <!-- PLAYBOOK -->
@@ -743,6 +835,23 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 
 </div><!-- /main -->
 </div><!-- /shell -->
+<!-- ONBOARDING TOUR -->
+<div id="onboard-overlay" class="onboard-overlay" style="display:none">
+  <div class="onboard-box">
+    <div class="onboard-top">
+      <div class="onboard-steps" id="onboard-steps"></div>
+      <div id="onboard-content"></div>
+    </div>
+    <div class="onboard-footer">
+      <button class="onboard-skip" onclick="skipOnboard()">Skip tour</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" id="onboard-back" onclick="onboardNav(-1)" style="display:none">← Back</button>
+        <button class="btn btn-green" id="onboard-next" onclick="onboardNav(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </div><!-- /app-shell -->
 
 <!-- TRADE DETAIL MODAL -->
@@ -846,6 +955,8 @@ onAuthStateChanged(auth, async (user) => {
     loginScreen.style.display = 'none';
     appShell.style.display = 'flex';
     renderDashboard();
+    // Show onboarding for new users
+    setTimeout(()=>{ if(window._showOnboardIfNew) window._showOnboardIfNew(); }, 500);
   } else {
     loginScreen.style.display = 'flex';
     appShell.style.display = 'none';
@@ -2001,6 +2112,41 @@ function renderStreaks() {
       ${m.hit?`<span style="font-size:11px;color:var(--green);font-weight:700">DONE</span>`:''}
     </div>`).join('');
 }
+
+// ─── PAGE EXPLAINERS ─────────────────────────────────────────────────────────
+function toggleExplainer(id) {
+  const el=document.getElementById(id); if(!el)return;
+  const content=el.querySelector('.explainer-content');
+  const tips=el.querySelector('.tip-row');
+  const btn=el.querySelector('.explainer-toggle');
+  const isCollapsed=content.style.display==='none';
+  content.style.display=isCollapsed?'':'none';
+  if(tips)tips.style.display=isCollapsed?'':'none';
+  btn.textContent=isCollapsed?'Hide':'Show guide';
+}
+
+// ─── ONBOARDING TOUR ─────────────────────────────────────────────────────────
+const ONBOARD_KEY='edge_onboarded_v1';
+let onboardStep=0;
+const onboardSlides=[
+  {icon:'👋',title:'Welcome to EDGE',body:`EDGE is your <strong>AI-powered trading journal</strong> that finds what's making you money — and what's killing your account.<br><br>This quick tour takes 60 seconds and shows you exactly how to get value from day one.`},
+  {icon:'⚡',title:'Step 1 — Log your trades',body:`Go to <strong>Log Trade</strong> in the sidebar. Fill in ticker, side, entry, exit, and hit <strong>"Log + AI Review."</strong><br><br>The AI instantly grades your trade <strong>A–F</strong>, tells you what went right and wrong, and auto-tags your mistakes. No manual tagging needed.`},
+  {icon:'📊',title:'Step 2 — Your dashboard fills in',body:`After 3+ trades your <strong>equity curve</strong>, win rate, avg win/loss, and max drawdown all appear automatically.<br><br>After 5+ trades the <strong>Live Pattern Feed</strong> starts showing insights like <em>"Your best hour is 9:00 AM"</em> or <em>"FOMO has cost you $840."</em>`},
+  {icon:'🧠',title:'Step 3 — Let AI coach you',body:`<strong>AI Insights</strong> — run a full analysis of your trade history weekly. Finds patterns you can't see yourself.<br><br><strong>Trade Copilot</strong> — before entering a trade, type in your entry/stop/target and get a GO / CAUTION / SKIP verdict based on your personal history.`},
+  {icon:'🎯',title:'Step 4 — Build discipline',body:`<strong>Daily Routine</strong> — fill in your pre-market plan and post-market review every day.<br><br><strong>Rule Tracker</strong> — add rules like "No trades after 11AM" and track how much money you lose when you break them.<br><br><strong>Tilt Detection</strong> — automatically flags revenge trading and overtrading.`},
+  {icon:'🔥',title:"You're all set",body:`Start by logging your first trade — the app gets smarter with every entry.<br><br><strong>Your data syncs to your Google account</strong> so it's always backed up and works on any device.<br><br>Good luck out there. Trust your plan, not your emotions.`}
+];
+function showOnboard(){if(localStorage.getItem(ONBOARD_KEY))return;onboardStep=0;document.getElementById('onboard-overlay').style.display='flex';renderOnboardStep();}
+function renderOnboardStep(){
+  const slide=onboardSlides[onboardStep];
+  document.getElementById('onboard-steps').innerHTML=onboardSlides.map((_,i)=>`<div class="onboard-step-dot ${i<onboardStep?'done':i===onboardStep?'active':''}"></div>`).join('');
+  document.getElementById('onboard-content').innerHTML=`<div class="onboard-icon">${slide.icon}</div><div class="onboard-title">${slide.title}</div><div class="onboard-body">${slide.body}</div>`;
+  document.getElementById('onboard-back').style.display=onboardStep>0?'':'none';
+  document.getElementById('onboard-next').textContent=onboardStep===onboardSlides.length-1?"Let's go →":'Next →';
+}
+function onboardNav(dir){onboardStep+=dir;if(onboardStep>=onboardSlides.length){skipOnboard();return;}onboardStep=Math.max(0,onboardStep);renderOnboardStep();}
+function skipOnboard(){localStorage.setItem(ONBOARD_KEY,'1');document.getElementById('onboard-overlay').style.display='none';}
+window._showOnboardIfNew=showOnboard;
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 document.getElementById('q-datetime').value=new Date().toISOString().slice(0,16);
