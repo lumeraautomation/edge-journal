@@ -565,7 +565,6 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div><div class="page-title">Log a Trade</div><div class="page-sub">Fill in the details and hit Log — AI reviews instantly</div></div>
   </div>
 
-  <!-- QUICK ENTRY FORM -->
   <div class="card" style="margin-bottom:16px">
     <div class="card-header" style="margin-bottom:16px">
       <span class="card-title">Trade details</span>
@@ -574,6 +573,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
         <button class="side-btn" id="btn-short" onclick="setSide('short')">Short</button>
       </div>
     </div>
+
     <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
       <div class="qe-field"><label>Ticker</label><input id="q-ticker" placeholder="NQ" value="NQ"></div>
       <div class="qe-field"><label>Entry $</label><input id="q-entry" type="number" placeholder="21000"></div>
@@ -584,23 +584,21 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       <div class="qe-field"><label>Stop $</label><input id="q-sl" type="number" placeholder="20980"></div>
       <div class="qe-field"><label>Target $</label><input id="q-tp" type="number" placeholder="21080"></div>
       <div class="qe-field"><label>Fees $</label><input id="q-fees" type="number" value="0"></div>
+      <div class="qe-field"><label>Date &amp; Time</label><input id="q-datetime" type="datetime-local"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
       <div class="qe-field"><label>Setup</label><select id="q-setup"><option value="">— setup —</option></select></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end">
-      <div class="qe-field"><label>Date &amp; Time</label><input id="q-datetime" type="datetime-local"></div>
-      <button class="btn btn-green" style="height:38px;padding:0 24px;font-size:13px" onclick="quickLog()">Log + AI Review ↗</button>
-    </div>
-  </div>
 
-  <!-- NOTES + TAGS -->
-  <div class="card" style="margin-bottom:16px">
-    <div class="card-header" style="margin-bottom:16px"><span class="card-title">Notes &amp; tags</span><span class="card-sub">Optional — makes AI reviews smarter</span></div>
-    <div class="modal-field"><label>Trade notes / thesis</label><textarea id="full-notes" placeholder="What was the setup? Why did you take it? How did it play out?" style="min-height:80px"></textarea></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div class="modal-field" style="margin-bottom:0"><label>Setup tags</label><div class="tag-select" id="setup-tags" style="margin-top:6px"></div></div>
-      <div class="modal-field" style="margin-bottom:0"><label>Mistake tags</label><div class="tag-select" id="mistake-tags" style="margin-top:6px"></div></div>
+    <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
+      <div class="modal-field" style="margin-bottom:12px"><label>Notes / thesis <span style="color:var(--dim);font-weight:400;font-size:11px">— optional</span></label><textarea id="full-notes" placeholder="What was the setup? Why did you take it? How did it play out?" style="min-height:70px"></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="modal-field" style="margin-bottom:0"><label>Setup tags</label><div class="tag-select" id="setup-tags" style="margin-top:6px"></div></div>
+        <div class="modal-field" style="margin-bottom:0"><label>Mistake tags</label><div class="tag-select" id="mistake-tags" style="margin-top:6px"></div></div>
+      </div>
     </div>
-    <button class="btn btn-green" onclick="fullLog()" style="width:100%;justify-content:center">Save with notes + AI Review ↗</button>
+
+    <button class="btn btn-green" onclick="fullLog()" style="width:100%;justify-content:center;font-size:14px;padding:12px">Log trade + AI Review ↗</button>
   </div>
 
   <!-- MANAGE TAGS -->
