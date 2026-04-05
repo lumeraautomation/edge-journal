@@ -385,6 +385,32 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 /* PHOTO MODAL */
 .photo-modal-img{width:100%;border-radius:var(--r);margin-bottom:14px;max-height:60vh;object-fit:contain;background:var(--bg3)}
 
+/* PAYWALL */
+.paywall-card{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:32px;text-align:center;margin:20px 0}
+.paywall-icon{font-size:32px;margin-bottom:12px}
+.paywall-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;font-family:'Geist',sans-serif}
+.paywall-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.paywall-features{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;text-align:left;max-width:280px;margin-left:auto;margin-right:auto}
+.paywall-feature{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.paywall-feature::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0}
+.pro-badge{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#f5a623,#ff6b35);color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;font-family:'Geist',sans-serif;letter-spacing:.04em}
+.upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:5000;display:none;align-items:center;justify-content:center}
+.upgrade-modal-overlay.open{display:flex}
+.upgrade-modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r3);padding:0;width:460px;max-width:94vw;overflow:hidden}
+.upgrade-hero{background:linear-gradient(135deg,#0a0a0b 0%,#111113 100%);border-bottom:1px solid var(--border);padding:32px 32px 24px;text-align:center;position:relative}
+.upgrade-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--green),#4a9eff,var(--amber))}
+.upgrade-price{font-size:48px;font-weight:800;font-family:'Geist Mono',monospace;color:var(--text);letter-spacing:-2px;line-height:1}
+.upgrade-price span{font-size:18px;font-weight:400;color:var(--muted);letter-spacing:0}
+.upgrade-body{padding:24px 32px 28px}
+.upgrade-feature-list{list-style:none;margin-bottom:20px}
+.upgrade-feature-list li{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text)}
+.upgrade-feature-list li:last-child{border-bottom:none}
+.upgrade-feature-list li::before{content:'✓';color:var(--green);font-weight:700;font-size:14px;flex-shrink:0}
+.upgrade-feature-list li.locked{color:var(--muted)}
+.upgrade-feature-list li.locked::before{content:'—';color:var(--dim)}
+.nav-item-pro{position:relative}
+.nav-pro-lock{font-size:9px;margin-left:auto;color:var(--amber);opacity:.7}
+
 @media(max-width:900px){
   .sidebar{width:180px}
   .metrics{grid-template-columns:repeat(3,1fr)}
@@ -423,6 +449,10 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- SIDEBAR -->
 <div class="sidebar">
   <div class="logo">EDGE<span>.</span><span class="logo-sub">Trading Journal</span></div>
+  <div style="padding:0 20px 14px;display:flex;align-items:center;gap:8px">
+    <span id="sidebar-pro-badge" class="pro-badge" style="display:none">⚡ PRO</span>
+    <span id="sidebar-free-badge" style="font-size:10px;color:var(--dim);cursor:pointer" onclick="openUpgradeModal()">Free plan · Upgrade →</span>
+  </div>
 
   <!-- CORE 4 -->
   <div class="nav-item active" onclick="go('dashboard')">
@@ -434,21 +464,21 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   <div class="nav-item" onclick="go('history')">
     <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>History
   </div>
-  <div class="nav-item" onclick="go('copilot')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0A6 6 0 012 8z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/></svg>AI Copilot
+  <div class="nav-item" onclick="goPro('copilot')">
+    <svg viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0A6 6 0 012 8z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/></svg>AI Copilot<span class="nav-pro-lock" id="lock-copilot">⚡</span>
   </div>
 
   <div class="nav-divider"></div>
 
   <!-- ANALYTICS QUICK LINKS -->
-  <div class="nav-item" onclick="go('setups')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M1 12l4-5 4 3 5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Setups
+  <div class="nav-item" onclick="goPro('setups')">
+    <svg viewBox="0 0 16 16" fill="none"><path d="M1 12l4-5 4 3 5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Setups<span class="nav-pro-lock" id="lock-setups">⚡</span>
   </div>
-  <div class="nav-item" onclick="go('mistakes')">
-    <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 7v3M8 12v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Mistakes
+  <div class="nav-item" onclick="goPro('mistakes')">
+    <svg viewBox="0 0 16 16" fill="none"><path d="M8 2L1 14h14L8 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M8 7v3M8 12v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Mistakes<span class="nav-pro-lock" id="lock-mistakes">⚡</span>
   </div>
-  <div class="nav-item" onclick="go('insights')">
-    <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="currentColor" opacity=".5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>AI Insights
+  <div class="nav-item" onclick="goPro('insights')">
+    <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" fill="currentColor" opacity=".5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>AI Insights<span class="nav-pro-lock" id="lock-insights">⚡</span>
   </div>
 
   <div class="nav-divider"></div>
@@ -642,7 +672,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       </div>
     </div>
 
-    <button class="btn btn-green" onclick="fullLog()" style="width:100%;justify-content:center;font-size:14px;padding:12px">Log trade + AI Review ↗</button>
+    <button class="btn btn-green" onclick="fullLogGated()" style="width:100%;justify-content:center;font-size:14px;padding:12px">Log trade + AI Review ↗</button>
   </div>
 
   <!-- MANAGE TAGS -->
@@ -972,6 +1002,35 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   </div>
 </div>
 
+<!-- UPGRADE MODAL -->
+<div class="upgrade-modal-overlay" id="upgrade-modal" onclick="if(event.target===this)closeUpgradeModal()">
+  <div class="upgrade-modal">
+    <div class="upgrade-hero">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;letter-spacing:.04em">EDGE PRO</div>
+      <div class="upgrade-price">$9<span>/month</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:8px">Cancel anytime · Instant access</div>
+    </div>
+    <div class="upgrade-body">
+      <ul class="upgrade-feature-list">
+        <li>AI trade review — grade every trade instantly</li>
+        <li>AI Coach — chat with your personal trading coach</li>
+        <li>AI Insights — weekly pattern analysis</li>
+        <li>Trade Copilot — analyze before you enter</li>
+        <li>Tilt Detection — catch revenge trading</li>
+        <li>Setup Analytics — find your real edge</li>
+        <li>Trade Gallery — visual chart archive</li>
+        <li>Risk Consistency scoring</li>
+        <li class="locked">Basic logging — always free</li>
+        <li class="locked">Trade history — always free</li>
+        <li class="locked">Dashboard stats — always free</li>
+      </ul>
+      <button class="btn btn-green" id="upgrade-btn" onclick="handleUpgrade()" style="width:100%;justify-content:center;font-size:14px;padding:13px;font-weight:700">Upgrade to Pro — $9/month</button>
+      <div style="font-size:11px;color:var(--dim);text-align:center;margin-top:10px">Secure payment via Stripe · Cancel anytime</div>
+      <button class="btn btn-sm" onclick="closeUpgradeModal()" style="width:100%;justify-content:center;margin-top:8px;color:var(--muted)">Maybe later</button>
+    </div>
+  </div>
+</div>
+
 <!-- PHOTO VIEWER -->
 <div id="photo-viewer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:2000;align-items:center;justify-content:center;cursor:zoom-out" onclick="document.getElementById('photo-viewer').style.display='none'">
   <img id="photo-viewer-img" src="" style="max-width:92vw;max-height:92vh;border-radius:var(--r);object-fit:contain">
@@ -1070,19 +1129,30 @@ onAuthStateChanged(auth, async (user) => {
     // Load cloud data
     const cloudData = await window._fbLoad();
     if (cloudData) {
-      // merge cloud into state
       window._mergeCloudData(cloudData);
+    }
+    // Check pro status from Firestore
+    try {
+      const proSnap = await getDoc(doc(db, 'pro_users', user.uid));
+      window._isPro = proSnap.exists() && proSnap.data().active === true;
+    } catch(e) {
+      window._isPro = false;
     }
     // Update user UI
     document.getElementById('user-avatar').src = user.photoURL || '';
     document.getElementById('user-name').textContent = user.displayName || user.email;
+    // Show pro badge if pro
+    const proEl = document.getElementById('sidebar-pro-badge');
+    if (proEl) proEl.style.display = window._isPro ? 'inline-flex' : 'none';
     // Show app
     loginScreen.style.display = 'none';
     appShell.style.display = 'flex';
     renderDashboard();
+    updateProUI();
     // Show onboarding for new users
     setTimeout(()=>{ if(window._showOnboardIfNew) window._showOnboardIfNew(); }, 500);
   } else {
+    window._isPro = false;
     loginScreen.style.display = 'flex';
     appShell.style.display = 'none';
   }
@@ -1160,6 +1230,7 @@ window._mergeCloudData = function(cloudData) {
   state.routines = cloudData.routines || state.routines;
   state.gradingCriteria = cloudData.gradingCriteria || state.gradingCriteria || {};
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){}
+  if (typeof updateProUI === 'function') updateProUI();
 };
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
@@ -1174,16 +1245,17 @@ function go(page) {
   if (navItems[idx]) navItems[idx].classList.add('active');
   if (page==='dashboard') renderDashboard();
   if (page==='history') renderHistory();
-  if (page==='setups') { renderSetupAnalytics(); renderGallery(); }
-  if (page==='mistakes') renderMistakeAnalytics();
+  if (page==='setups') { if(!isPro()){openUpgradeModal();return;} renderSetupAnalytics(); renderGallery(); }
+  if (page==='mistakes') { if(!isPro()){openUpgradeModal();return;} renderMistakeAnalytics(); }
+  if (page==='insights') { if(!isPro()){openUpgradeModal();return;} }
   if (page==='log') renderLogPage();
-  if (page==='playbook') renderPlaybook();
-  if (page==='routine') renderRoutinePage();
-  if (page==='rules') renderRules();
-  if (page==='tilt') renderTilt();
-  if (page==='risk') renderRisk();
-  if (page==='streaks') renderStreaks();
-  if (page==='copilot') renderCopilotPage();
+  if (page==='playbook') { if(!isPro()){openUpgradeModal();return;} renderPlaybook(); }
+  if (page==='routine') { if(!isPro()){openUpgradeModal();return;} renderRoutinePage(); }
+  if (page==='rules') { if(!isPro()){openUpgradeModal();return;} renderRules(); }
+  if (page==='tilt') { if(!isPro()){openUpgradeModal();return;} renderTilt(); }
+  if (page==='risk') { if(!isPro()){openUpgradeModal();return;} renderRisk(); }
+  if (page==='streaks') { if(!isPro()){openUpgradeModal();return;} renderStreaks(); }
+  if (page==='copilot') { if(!isPro()){openUpgradeModal();return;} renderCopilotPage(); }
 }
 
 // ─── CALC ─────────────────────────────────────────────────────────────────────
@@ -2514,6 +2586,94 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('chat-input');
   if (input) input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 100) + 'px'; });
 });
+
+// ─── PAYWALL SYSTEM ───────────────────────────────────────────────────────────
+window._isPro = false;
+
+const PRO_PAGES = ['copilot','setups','mistakes','insights','routine','rules','tilt','risk','streaks','playbook'];
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/REPLACE_WITH_YOUR_STRIPE_LINK';
+
+function isPro() { return window._isPro === true; }
+
+function goPro(page) {
+  if (isPro() || !PRO_PAGES.includes(page)) {
+    go(page);
+  } else {
+    openUpgradeModal();
+  }
+}
+
+function openUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.add('open');
+}
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('open');
+}
+window.openUpgradeModal = openUpgradeModal;
+window.closeUpgradeModal = closeUpgradeModal;
+
+function handleUpgrade() {
+  window.open(STRIPE_PAYMENT_LINK, '_blank');
+}
+window.handleUpgrade = handleUpgrade;
+
+function updateProUI() {
+  const pro = isPro();
+  // Lock icons
+  ['copilot','setups','mistakes','insights'].forEach(id => {
+    const el = document.getElementById('lock-' + id);
+    if (el) el.style.display = pro ? 'none' : '';
+  });
+  // Free/pro badge
+  const freeBadge = document.getElementById('sidebar-free-badge');
+  const proBadge = document.getElementById('sidebar-pro-badge');
+  if (freeBadge) freeBadge.style.display = pro ? 'none' : '';
+  if (proBadge) proBadge.style.display = pro ? 'inline-flex' : 'none';
+  // Chat panel
+  const chatPanel = document.getElementById('chat-panel');
+  if (chatPanel) chatPanel.style.display = pro ? 'flex' : 'none';
+  // AI review button — gate on log trade page
+  const reviewBtn = document.querySelector('[onclick="fullLog()"]');
+  if (reviewBtn) {
+    if (!pro) {
+      reviewBtn.textContent = 'Log trade (upgrade for AI Review ⚡)';
+      reviewBtn.style.background = 'var(--bg3)';
+      reviewBtn.style.color = 'var(--text)';
+      reviewBtn.style.border = '1px solid var(--border2)';
+    }
+  }
+}
+
+// Gate AI review for free users — just save without AI
+function fullLogGated() {
+  if (!isPro()) {
+    const t = buildTrade(true);
+    if (!t) return;
+    t.photos = [...pendingPhotos];
+    state.trades.push(t);
+    save();
+    document.getElementById('full-notes').value = '';
+    state.selectedSetups = [];
+    state.selectedMistakes = [];
+    pendingPhotos = [];
+    renderPhotoPreviews();
+    document.getElementById('q-entry').value = '';
+    document.getElementById('q-exit').value = '';
+    document.getElementById('q-outcome').value = '';
+    renderTagSelectors();
+    // Show upgrade prompt instead of AI review
+    go('history');
+    setTimeout(() => {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--green-border);border-radius:var(--r2);padding:14px 18px;z-index:3000;display:flex;align-items:center;gap:12px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+      banner.innerHTML = `<span>Trade logged! <strong style="color:var(--green)">Upgrade to Pro</strong> to get AI reviews.</span><button class="btn btn-green btn-sm" onclick="openUpgradeModal();this.parentElement.remove()">Upgrade ⚡</button><button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px" onclick="this.parentElement.remove()">✕</button>`;
+      document.body.appendChild(banner);
+      setTimeout(() => banner.remove(), 6000);
+    }, 300);
+    return;
+  }
+  fullLog();
+}
 
 // ─── MORE MENU TOGGLE ─────────────────────────────────────────────────────────
 function toggleMore(el) {
