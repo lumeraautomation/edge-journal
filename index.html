@@ -755,6 +755,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <span class="sync-dot" id="sync-dot" title="Synced to cloud"></span>
     <img class="user-avatar" id="user-avatar" src="" alt="">
     <span class="user-name" id="user-name"></span>
+    <button class="signout-btn" id="manage-sub-btn" onclick="window.open('https://billing.stripe.com/p/login/7sY5kw5HQccZ1y3c7j6EU00','_blank')" style="display:none" title="Manage subscription">Manage</button>
     <button class="signout-btn" onclick="window._fbSignOut()">Out</button>
   </div>
 </div>
@@ -2842,7 +2843,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── PAYWALL SYSTEM ───────────────────────────────────────────────────────────
 window._isPro = false;
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/dRmdR27PYccZ6Sngnz6EU02';
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/REPLACE_WITH_YOUR_STRIPE_LINK';
 
 function isPro() { return window._isPro === true; }
 function goPro(page) { go(page); }
@@ -2897,6 +2898,8 @@ function updateProUI() {
   // Chat panel
   const chatPanel = document.getElementById('chat-panel');
   if (chatPanel) chatPanel.style.display = pro ? 'flex' : 'none';
+  const manageBtn = document.getElementById('manage-sub-btn');
+  if (manageBtn) manageBtn.style.display = pro ? '' : 'none';
 
   // More menu items — dim if free, and intercept click to show upgrade modal
   const moreProItems = document.querySelectorAll('.more-pro-item');
