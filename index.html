@@ -408,8 +408,10 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .upgrade-feature-list li::before{content:'✓';color:var(--green);font-weight:700;font-size:14px;flex-shrink:0}
 .upgrade-feature-list li.locked{color:var(--muted)}
 .upgrade-feature-list li.locked::before{content:'—';color:var(--dim)}
-.nav-item-pro{position:relative}
-.nav-pro-lock{font-size:9px;margin-left:auto;color:var(--amber);opacity:.7}
+.nav-item-locked{opacity:.45;cursor:pointer}
+.nav-item-locked:hover{opacity:.65;background:var(--bg3)}
+.nav-pro-lock{font-size:10px;margin-left:auto;color:var(--amber);flex-shrink:0}
+.more-submenu .nav-item-locked{padding-left:30px}
 
 /* BLUR PAYWALL */
 .pro-section{position:relative}
@@ -499,24 +501,25 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <span class="more-chevron">▼</span>
   </div>
   <div class="more-submenu" id="more-submenu">
-    <div class="nav-item" onclick="go('routine')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4M2 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Daily Routine
+    <div class="nav-item more-pro-item" id="more-routine" onclick="go('routine')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4M2 7h12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Daily Routine<span class="nav-pro-lock">⚡</span>
     </div>
-    <div class="nav-item" onclick="go('rules')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M4 8l2.5 2.5L12 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3"/></svg>Rule Tracker
+    <div class="nav-item more-pro-item" id="more-rules" onclick="go('rules')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M4 8l2.5 2.5L12 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3"/></svg>Rule Tracker<span class="nav-pro-lock">⚡</span>
     </div>
-    <div class="nav-item" onclick="go('tilt')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M8 2c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Tilt Detection
+    <div class="nav-item more-pro-item" id="more-tilt" onclick="go('tilt')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M8 2c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z" stroke="currentColor" stroke-width="1.3"/><path d="M8 5v4l2.5 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Tilt Detection<span class="nav-pro-lock">⚡</span>
     </div>
-    <div class="nav-item" onclick="go('risk')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M2 14V6l4-4h6l2 2v10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 14v-4h4v4" stroke="currentColor" stroke-width="1.3"/></svg>Risk Consistency
+    <div class="nav-item more-pro-item" id="more-risk" onclick="go('risk')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M2 14V6l4-4h6l2 2v10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M6 14v-4h4v4" stroke="currentColor" stroke-width="1.3"/></svg>Risk Consistency<span class="nav-pro-lock">⚡</span>
     </div>
-    <div class="nav-item" onclick="go('streaks')">
-      <svg viewBox="0 0 16 16" fill="none"><path d="M9 2c0 3-3 4-3 7a4 4 0 008 0c0-4-5-7-5-7z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>Streaks
+    <div class="nav-item more-pro-item" id="more-streaks" onclick="go('streaks')">
+      <svg viewBox="0 0 16 16" fill="none"><path d="M9 2c0 3-3 4-3 7a4 4 0 008 0c0-4-5-7-5-7z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>Streaks<span class="nav-pro-lock">⚡</span>
     </div>
-    <div class="nav-item" onclick="go('playbook')">
-      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h4M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Playbook
+    <div class="nav-item more-pro-item" id="more-playbook" onclick="go('playbook')">
+      <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h4M5 11h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Playbook<span class="nav-pro-lock">⚡</span>
     </div>
+    <div class="nav-divider"></div>
     <div class="nav-item" onclick="openGradingSettings()">
       <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M11.1 4.9l-1.4 1.4M4.9 11.1l-1.4 1.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Grading Criteria
     </div>
@@ -2656,16 +2659,40 @@ window.handleUpgrade = handleUpgrade;
 
 function updateProUI() {
   const pro = isPro();
+
+  // Main nav lock icons
   ['copilot','setups','mistakes','insights'].forEach(id => {
     const el = document.getElementById('lock-' + id);
     if (el) el.style.display = pro ? 'none' : '';
   });
+
+  // Sidebar badges
   const freeBadge = document.getElementById('sidebar-free-badge');
   const proBadge = document.getElementById('sidebar-pro-badge');
   if (freeBadge) freeBadge.style.display = pro ? 'none' : '';
   if (proBadge) proBadge.style.display = pro ? 'inline-flex' : 'none';
+
+  // Chat panel
   const chatPanel = document.getElementById('chat-panel');
   if (chatPanel) chatPanel.style.display = pro ? 'flex' : 'none';
+
+  // More menu items — dim if free, and intercept click to show upgrade modal
+  const moreProItems = document.querySelectorAll('.more-pro-item');
+  moreProItems.forEach(item => {
+    const lockIcon = item.querySelector('.nav-pro-lock');
+    if (pro) {
+      item.classList.remove('nav-item-locked');
+      if (lockIcon) lockIcon.style.display = 'none';
+      // Remove any existing intercept
+      item.onclick = item._origClick || item.onclick;
+    } else {
+      item.classList.add('nav-item-locked');
+      if (lockIcon) lockIcon.style.display = '';
+      // Save original click and replace with upgrade modal
+      if (!item._origClick) item._origClick = item.onclick;
+      item.onclick = (e) => { e.stopPropagation(); openUpgradeModal(); };
+    }
+  });
 }
 
 function fullLogGated() {
