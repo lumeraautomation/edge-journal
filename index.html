@@ -411,6 +411,15 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 .nav-item-pro{position:relative}
 .nav-pro-lock{font-size:9px;margin-left:auto;color:var(--amber);opacity:.7}
 
+/* BLUR PAYWALL */
+.pro-section{position:relative}
+.pro-blur{filter:blur(4px);pointer-events:none;user-select:none;opacity:.7}
+.pro-gate{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;background:rgba(10,10,11,.55);border-radius:var(--r2);backdrop-filter:blur(2px)}
+.pro-gate-inner{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r2);padding:20px 24px;text-align:center;max-width:300px}
+.pro-gate-icon{font-size:22px;margin-bottom:8px}
+.pro-gate-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;font-family:'Geist',sans-serif}
+.pro-gate-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+
 @media(max-width:900px){
   .sidebar{width:180px}
   .metrics{grid-template-columns:repeat(3,1fr)}
@@ -1245,17 +1254,21 @@ function go(page) {
   if (navItems[idx]) navItems[idx].classList.add('active');
   if (page==='dashboard') renderDashboard();
   if (page==='history') renderHistory();
-  if (page==='setups') { if(!isPro()){openUpgradeModal();return;} renderSetupAnalytics(); renderGallery(); }
-  if (page==='mistakes') { if(!isPro()){openUpgradeModal();return;} renderMistakeAnalytics(); }
-  if (page==='insights') { if(!isPro()){openUpgradeModal();return;} }
+  if (page==='setups') { renderSetupAnalytics(); renderGallery(); }
+  if (page==='mistakes') renderMistakeAnalytics();
+  if (page==='insights') {
+    if (!isPro()) {
+      setTimeout(()=>{ applyProGate('insights-output','AI Insights is Pro','Upgrade to get weekly AI pattern analysis — "your best setup is Mech Model at 9:30AM" and more.'); }, 50);
+    }
+  }
   if (page==='log') renderLogPage();
-  if (page==='playbook') { if(!isPro()){openUpgradeModal();return;} renderPlaybook(); }
-  if (page==='routine') { if(!isPro()){openUpgradeModal();return;} renderRoutinePage(); }
-  if (page==='rules') { if(!isPro()){openUpgradeModal();return;} renderRules(); }
-  if (page==='tilt') { if(!isPro()){openUpgradeModal();return;} renderTilt(); }
-  if (page==='risk') { if(!isPro()){openUpgradeModal();return;} renderRisk(); }
-  if (page==='streaks') { if(!isPro()){openUpgradeModal();return;} renderStreaks(); }
-  if (page==='copilot') { if(!isPro()){openUpgradeModal();return;} renderCopilotPage(); }
+  if (page==='playbook') renderPlaybook();
+  if (page==='routine') renderRoutinePage();
+  if (page==='rules') renderRules();
+  if (page==='tilt') renderTilt();
+  if (page==='risk') renderRisk();
+  if (page==='streaks') renderStreaks();
+  if (page==='copilot') renderCopilotPage();
 }
 
 // ─── CALC ─────────────────────────────────────────────────────────────────────
@@ -1324,6 +1337,8 @@ function renderDashboard() {
   renderHourHeat(T);
   renderRecent();
   refreshPatternFeed();
+  // Gate pattern feed for free users
+  setTimeout(()=>{ applyProGate('pattern-feed', 'Live Pattern Feed is Pro', 'Upgrade to see real-time insights like "You lose 72% of trades after 11AM" and "FOMO has cost you $840."'); }, 100);
 }
 
 function renderEquity(T, pnls) {
@@ -1689,6 +1704,13 @@ function renderSetupAnalytics() {
     return `<tr><td><strong>${s}</strong></td><td>${v.count}</td><td class="${wr>=50?'pnl-pos':'pnl-neg'}">${wr}%</td><td class="${v.pnl>=0?'pnl-pos':'pnl-neg'}">${pf(v.pnl)}</td><td class="pnl-pos">${avgW?'+$'+Math.round(avgW):'—'}</td><td class="pnl-neg">${avgL?'-$'+Math.abs(Math.round(avgL)):'—'}</td><td class="pnl-pos">${best?'+$'+Math.round(best):'—'}</td><td class="pnl-neg">${worst?'-$'+Math.abs(Math.round(worst)):'—'}</td></tr>`;
   }).join('');
 
+  // Gate detailed breakdown and BE analysis for free users
+  setTimeout(()=>{
+    applyProGate('setup-detail-table', 'Full breakdown is Pro', 'Upgrade to see avg win/loss, best/worst trade per setup, and your complete edge analysis.');
+    applyProGate('be-analysis-content', 'BE Analysis is Pro', 'Upgrade to see if going to breakeven is helping or hurting your account.');
+    applyProGate('gallery-grid', 'Trade Gallery is Pro', 'Upgrade to browse all your trades with chart screenshots, grades, and notes in one place.');
+  }, 50);
+
   // ── BE ANALYSIS ──────────────────────────────────────────────────────────────
   const beEl = document.getElementById('be-analysis-content');
   const headEl = document.getElementById('be-headline');
@@ -1834,10 +1856,15 @@ function renderMistakeAnalytics() {
   const byFreq=[...active].sort((a,b)=>b[1].count-a[1].count);
   const maxF=Math.max(...byFreq.map(([,v])=>v.count),1);
   freqList.innerHTML=byFreq.map(([m,v])=>`<div class="mistake-row"><span class="setup-name" style="color:var(--amber)">${m}</span><div class="bar-wrap"><div class="bar-fill" style="width:${Math.round(v.count/maxF*100)}%;background:var(--amber)"></div></div><span class="stat-val" style="color:var(--amber)">${v.count}×</span></div>`).join('');
+
+  setTimeout(()=>{
+    applyProGate('mistake-freq-list', 'Frequency analysis is Pro', 'Upgrade to see how often you make each mistake and which ones you\'re repeating the most.');
+  }, 50);
 }
 
 // ─── AI INSIGHTS ──────────────────────────────────────────────────────────────
 async function runInsights() {
+  if (!isPro()) { openUpgradeModal(); return; }
   if(state.trades.length<3){document.getElementById('insights-output').innerHTML='<div class="empty"><strong>Not enough data</strong>Log at least 3 trades first.</div>';return;}
   document.getElementById('insights-output').innerHTML='<div class="insight-box loading">Analyzing '+state.trades.length+' trades across all sessions...</div>';
   const summary=state.trades.map(t=>{
@@ -2318,6 +2345,7 @@ function renderTilt() {
 }
 
 async function runTiltAnalysis() {
+  if (!isPro()) { openUpgradeModal(); return; }
   const T=state.trades;if(T.length<5)return;
   document.getElementById('tilt-output').innerHTML='<div class="insight-box loading">Analyzing emotional trading patterns...</div>';
   const summary=T.map((t,i)=>{const pnl=calcPnL(t);const prev=T[i-1];const prevPnl=prev?calcPnL(prev):null;return `${t.datetime?.slice(0,16)||'?'} | ${t.ticker} ${t.side} | PnL:$${Math.round(pnl)} | qty:${t.qty} | prevPnL:${prevPnl!=null?'$'+Math.round(prevPnl):'n/a'} | mistakes:${(t.mistakes||[]).join('+')||'none'}`;}).join('\n');
@@ -2589,62 +2617,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── PAYWALL SYSTEM ───────────────────────────────────────────────────────────
 window._isPro = false;
-
-const PRO_PAGES = ['copilot','setups','mistakes','insights','routine','rules','tilt','risk','streaks','playbook'];
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/REPLACE_WITH_YOUR_STRIPE_LINK';
 
 function isPro() { return window._isPro === true; }
+function goPro(page) { go(page); }
 
-function goPro(page) {
-  if (isPro() || !PRO_PAGES.includes(page)) {
-    go(page);
-  } else {
-    openUpgradeModal();
-  }
+function proGateHTML(title, sub) {
+  return `<div class="pro-gate">
+    <div class="pro-gate-inner">
+      <div class="pro-gate-icon">⚡</div>
+      <div class="pro-gate-title">${title}</div>
+      <div class="pro-gate-sub">${sub}</div>
+      <button class="btn btn-green btn-sm" style="width:100%;justify-content:center" onclick="openUpgradeModal()">Upgrade to Pro — $9/mo</button>
+    </div>
+  </div>`;
 }
 
-function openUpgradeModal() {
-  document.getElementById('upgrade-modal').classList.add('open');
+function applyProGate(containerId, title, sub) {
+  if (isPro()) return;
+  const el = document.getElementById(containerId);
+  if (!el || el.querySelector('.pro-gate')) return;
+  el.style.position = 'relative';
+  el.style.minHeight = '120px';
+  const blur = document.createElement('div');
+  blur.className = 'pro-blur';
+  blur.innerHTML = el.innerHTML;
+  el.innerHTML = '';
+  el.appendChild(blur);
+  el.insertAdjacentHTML('beforeend', proGateHTML(title, sub));
 }
-function closeUpgradeModal() {
-  document.getElementById('upgrade-modal').classList.remove('open');
-}
+
+function openUpgradeModal() { document.getElementById('upgrade-modal').classList.add('open'); }
+function closeUpgradeModal() { document.getElementById('upgrade-modal').classList.remove('open'); }
 window.openUpgradeModal = openUpgradeModal;
 window.closeUpgradeModal = closeUpgradeModal;
-
-function handleUpgrade() {
-  window.open(STRIPE_PAYMENT_LINK, '_blank');
-}
+function handleUpgrade() { window.open(STRIPE_PAYMENT_LINK, '_blank'); }
 window.handleUpgrade = handleUpgrade;
 
 function updateProUI() {
   const pro = isPro();
-  // Lock icons
   ['copilot','setups','mistakes','insights'].forEach(id => {
     const el = document.getElementById('lock-' + id);
     if (el) el.style.display = pro ? 'none' : '';
   });
-  // Free/pro badge
   const freeBadge = document.getElementById('sidebar-free-badge');
   const proBadge = document.getElementById('sidebar-pro-badge');
   if (freeBadge) freeBadge.style.display = pro ? 'none' : '';
   if (proBadge) proBadge.style.display = pro ? 'inline-flex' : 'none';
-  // Chat panel
   const chatPanel = document.getElementById('chat-panel');
   if (chatPanel) chatPanel.style.display = pro ? 'flex' : 'none';
-  // AI review button — gate on log trade page
-  const reviewBtn = document.querySelector('[onclick="fullLog()"]');
-  if (reviewBtn) {
-    if (!pro) {
-      reviewBtn.textContent = 'Log trade (upgrade for AI Review ⚡)';
-      reviewBtn.style.background = 'var(--bg3)';
-      reviewBtn.style.color = 'var(--text)';
-      reviewBtn.style.border = '1px solid var(--border2)';
-    }
-  }
 }
 
-// Gate AI review for free users — just save without AI
 function fullLogGated() {
   if (!isPro()) {
     const t = buildTrade(true);
@@ -2661,15 +2684,14 @@ function fullLogGated() {
     document.getElementById('q-exit').value = '';
     document.getElementById('q-outcome').value = '';
     renderTagSelectors();
-    // Show upgrade prompt instead of AI review
     go('history');
     setTimeout(() => {
       const banner = document.createElement('div');
-      banner.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--green-border);border-radius:var(--r2);padding:14px 18px;z-index:3000;display:flex;align-items:center;gap:12px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.4)';
-      banner.innerHTML = `<span>Trade logged! <strong style="color:var(--green)">Upgrade to Pro</strong> to get AI reviews.</span><button class="btn btn-green btn-sm" onclick="openUpgradeModal();this.parentElement.remove()">Upgrade ⚡</button><button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px" onclick="this.parentElement.remove()">✕</button>`;
+      banner.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--green-border);border-radius:var(--r2);padding:14px 18px;z-index:3000;display:flex;align-items:center;gap:12px;font-size:13px;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.4)';
+      banner.innerHTML = `<div style="flex:1"><strong style="color:var(--green)">Trade logged!</strong> Upgrade to Pro for AI reviews, insights, and your full coaching dashboard.</div><button class="btn btn-green btn-sm" onclick="openUpgradeModal();this.parentElement.remove()">⚡ Upgrade</button><button style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;flex-shrink:0" onclick="this.parentElement.remove()">✕</button>`;
       document.body.appendChild(banner);
-      setTimeout(() => banner.remove(), 6000);
-    }, 300);
+      setTimeout(() => { if (banner.parentElement) banner.remove(); }, 7000);
+    }, 400);
     return;
   }
   fullLog();
