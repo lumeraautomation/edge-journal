@@ -1615,7 +1615,7 @@ function openTradeModal(idx,loading) {
   document.getElementById('trade-modal').classList.add('open');
 }
 function closeModal(){document.getElementById('trade-modal').classList.remove('open');}
-function deleteTrade(idx){if(!confirm('Delete this trade?'))return;state.trades.splice(idx,1);save();closeModal();renderHistory();renderDashboard();}
+function deleteTrade(idx){if(!confirm('Delete this trade?'))return;state.trades.splice(idx,1);save();const modal=document.getElementById('trade-modal');if(modal.classList.contains('open'))closeModal();renderHistory();renderDashboard();}
 
 // ─── HISTORY ──────────────────────────────────────────────────────────────────
 function renderHistory() {
@@ -1664,7 +1664,7 @@ function renderHistory() {
       <td>${(t.setups||[]).map(s=>`<span class="tag-pill setup-pill">${s}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
       <td>${(t.mistakes||[]).map(m=>`<span class="tag-pill mistake-pill">${m}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
       <td style="text-align:center">${t.grade?`<span class="grade-badge grade-${t.grade}">${t.grade}</span>`:'<span style="color:var(--dim);font-size:18px;font-weight:700">—</span>'}</td>
-      <td onclick="event.stopPropagation()"><button class="btn btn-sm" onclick="openTradeModal(${idx})">Review</button></td>
+      <td onclick="event.stopPropagation()" style="white-space:nowrap"><button class="btn btn-sm" onclick="openTradeModal(${idx})">Review</button> <button class="btn btn-sm btn-red" style="padding:5px 8px" onclick="event.stopPropagation();deleteTrade(${idx})" title="Delete trade">✕</button></td>
     </tr>`;
   }).join('');
 }
