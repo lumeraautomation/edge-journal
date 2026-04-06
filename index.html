@@ -755,7 +755,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <span class="sync-dot" id="sync-dot" title="Synced to cloud"></span>
     <img class="user-avatar" id="user-avatar" src="" alt="">
     <span class="user-name" id="user-name"></span>
-    <button class="signout-btn" id="manage-sub-btn" onclick="window.open('https://billing.stripe.com/p/login/7sY5kw5HQccZ1y3c7j6EU00','_blank')" style="display:none" title="Manage subscription">Manage</button>
+    <button class="signout-btn" id="manage-sub-btn" onclick="window.open('https://billing.stripe.com/p/login/REPLACE_WITH_STRIPE_PORTAL_LINK','_blank')" style="display:none" title="Manage subscription">Manage</button>
     <button class="signout-btn" onclick="window._fbSignOut()">Out</button>
   </div>
 </div>
@@ -1624,6 +1624,10 @@ function renderLogPage() {
   sm.innerHTML=state.setups.length?state.setups.map((s,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span class="tag-pill setup-pill">${s}</span><button class="btn btn-sm" onclick="removeSetup(${i})" style="color:var(--red)">✕</button></div>`).join(''):'<div style="color:var(--dim);font-size:12px;padding:8px 0">No setups yet</div>';
   const mm=document.getElementById('mistake-manage');
   mm.innerHTML=state.mistakes.length?state.mistakes.map((m,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span class="tag-pill mistake-pill">${m}</span><button class="btn btn-sm" onclick="removeMistake(${i})" style="color:var(--red)">✕</button></div>`).join(''):'<div style="color:var(--dim);font-size:12px;padding:8px 0">No mistake tags yet</div>';
+  // Set datetime to local time
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  const dtEl=document.getElementById('q-datetime');
+  if(dtEl&&!dtEl.value) dtEl.value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
   state.selectedSetups=[]; state.selectedMistakes=[];
   renderTagSelectors();
 }
@@ -3343,7 +3347,11 @@ function renderGallery() {
 })();
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-document.getElementById('q-datetime').value=new Date().toISOString().slice(0,16);
+// Set datetime to local time (not UTC)
+const _now = new Date();
+const _pad = n => String(n).padStart(2,'0');
+const _localDT = `${_now.getFullYear()}-${_pad(_now.getMonth()+1)}-${_pad(_now.getDate())}T${_pad(_now.getHours())}:${_pad(_now.getMinutes())}`;
+document.getElementById('q-datetime').value = _localDT;
 if (state.trades.length > 0) renderDashboard();
 </script>
 </body>
