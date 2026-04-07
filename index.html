@@ -872,6 +872,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <div class="page" id="page-log">
   <div class="page-header">
     <div><div class="page-title">Log a Trade</div><div class="page-sub" id="log-mode-sub">Quick mode — just P&L and R:R</div></div>
+    <button class="btn" onclick="document.getElementById('csv-import-card').scrollIntoView({behavior:'smooth'})">↓ Import CSV</button>
   </div>
 
   <div class="card" style="margin-bottom:16px">
@@ -982,7 +983,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   </div>
 
   <!-- CSV IMPORT -->
-  <div class="card">
+  <div class="card" id="csv-import-card">
     <div class="card-header">
       <span class="card-title">Import from Tradovate CSV</span>
       <button class="btn btn-sm" onclick="loadDemo()">Load demo data</button>
@@ -2385,29 +2386,105 @@ function removePlaybook(i){if(!confirm('Remove this playbook entry?'))return;sta
 function parseCSV(){
   const raw=document.getElementById('csv-raw').value.trim();
   if(!raw){alert('Paste CSV data first');return;}
-  const lines=raw.split('\n').filter(l=>l.trim());
-  const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/[^a-z0-9]/g,''));
-  const rows=lines.slice(1).map(l=>{ const v=l.split(','); const r={}; headers.forEach((h,i)=>r[h]=(v[i]||'').trim().replace(/^"|"$/g,'')); return r; });
-  const fills=rows.filter(r=>(r.status||'').toLowerCase().includes('fill'));
-  const buys=fills.filter(r=>(r.side||r.action||r.buysell||'').toLowerCase().includes('buy'));
-  const sells=fills.filter(r=>(r.side||r.action||r.buysell||'').toLowerCase().includes('sell'));
-  const pairs=Math.min(buys.length,sells.length);
-  if(!pairs){document.getElementById('csv-feedback').innerHTML='<span style="color:var(--red)">No filled buy/sell pairs found. Check column headers and status field.</span>';document.getElementById('import-preview').innerHTML='';return;}
-  const preview=[];
-  for(let i=0;i<pairs;i++){
-    const b=buys[i],s=sells[i];
-    const sym=(b.name||b.symbol||b.contract||'NQ').toUpperCase();
-    const ticker=sym.includes('MNQ')?'MNQ':sym.includes('NQ')?'NQ':sym.includes('MES')?'MES':'ES';
-    const entry=parseFloat(b.avgfillprice||b.price||0);
-    const exitP=parseFloat(s.avgfillprice||s.price||0);
-    const qty=parseInt(b.qty||b.fillqty||1);
-    const dt=(b.filledtime||b.placedtime||b.date||'').replace('Z','').slice(0,16);
-    preview.push({ticker,side:'long',entry,exit:exitP,qty,datetime:dt,setups:[],mistakes:[],notes:'Imported from CSV',fees:0,grade:null,review:null});
+
+  // Parse CSV properly handling quoted fields
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+    result.push(current.trim());
+    return result;
   }
-  window._importPreview=preview;
-  document.getElementById('csv-feedback').innerHTML=`<span style="color:var(--green)">${pairs} trade pair(s) parsed successfully.</span>`;
-  document.getElementById('import-preview').innerHTML=`<div class="card"><div class="card-header"><span class="card-title">Preview — ${pairs} trades</span><button class="btn btn-green btn-sm" onclick="importAll()">Import all ↗</button></div>`+
-    preview.map((t,i)=>{const pnl=calcPnL(t);return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span class="side-pill long-pill">LONG</span><strong>${t.ticker}</strong><span style="font-size:11px;color:var(--muted)">${t.datetime.slice(0,10)}</span><span style="font-size:12px;font-family:var(--mono)">${t.entry} → ${t.exit}</span><span style="margin-left:auto;font-weight:700;font-family:var(--mono)" class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</span><button class="btn btn-sm" onclick="importOne(${i})">Import ↗</button></div>`;}).join('')+'</div>';
+
+  const lines = raw.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { document.getElementById('csv-feedback').innerHTML='<span style="color:var(--red)">Need at least 2 rows (header + data)</span>'; return; }
+
+  const rawHeaders = parseCSVLine(lines[0]);
+  const headers = rawHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/g,''));
+
+  const rows = lines.slice(1).map(l => {
+    const vals = parseCSVLine(l);
+    const r = {};
+    headers.forEach((h,i) => r[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
+    return r;
+  }).filter(r => Object.values(r).some(v => v));
+
+  // Tradovate uses: side, avgFillPrice, qty, filledTime, name, ordStatus/status
+  // Try to find the right columns
+  const getVal = (row, ...keys) => {
+    for (const k of keys) {
+      const norm = k.toLowerCase().replace(/[^a-z0-9]/g,'');
+      if (row[norm] !== undefined && row[norm] !== '') return row[norm];
+    }
+    return '';
+  };
+
+  // Filter to filled orders only
+  const filled = rows.filter(r => {
+    const status = getVal(r,'ordStatus','status','orderStatus');
+    return !status || status.toLowerCase().includes('fill') || status.toLowerCase().includes('complete') || status === '';
+  });
+
+  if (!filled.length) {
+    document.getElementById('csv-feedback').innerHTML='<span style="color:var(--red)">No filled orders found. Make sure you exported "Fills" from Tradovate, not orders.</span>';
+    return;
+  }
+
+  // Separate buys and sells
+  const buys = filled.filter(r => {
+    const side = getVal(r,'side','action','buySell','direction');
+    return side.toLowerCase().includes('buy') || side.toLowerCase() === 'b';
+  });
+  const sells = filled.filter(r => {
+    const side = getVal(r,'side','action','buySell','direction');
+    return side.toLowerCase().includes('sell') || side.toLowerCase() === 's';
+  });
+
+  if (!buys.length || !sells.length) {
+    document.getElementById('csv-feedback').innerHTML=`<span style="color:var(--red)">Found ${filled.length} rows but couldn't separate buys/sells. Headers found: ${rawHeaders.join(', ')}</span>`;
+    return;
+  }
+
+  const pairs = Math.min(buys.length, sells.length);
+  const preview = [];
+
+  for (let i = 0; i < pairs; i++) {
+    const b = buys[i], s = sells[i];
+    const sym = (getVal(b,'name','symbol','contract','instrument')||'NQ').toUpperCase();
+    const ticker = sym.includes('MNQ')?'MNQ':sym.includes('NQ')?'NQ':sym.includes('MES')?'MES':sym.includes('ES')?'ES':'NQ';
+    const entry = parseFloat(getVal(b,'avgfillprice','avgprice','fillprice','price','filledprice'))||0;
+    const exitP = parseFloat(getVal(s,'avgfillprice','avgprice','fillprice','price','filledprice'))||0;
+    const qty = parseInt(getVal(b,'qty','quantity','fillqty','filledqty'))||1;
+    let dt = getVal(b,'filledtime','filltime','timestamp','datetime','date','time','placedtime');
+    // Normalize datetime
+    dt = dt.replace('Z','').replace('T',' ').slice(0,16);
+    if (!dt) { const now = new Date(); dt = now.toISOString().slice(0,16); }
+    preview.push({ticker, side:'long', entry, exit:exitP, qty, datetime:dt, setups:[], mistakes:[], notes:'Imported from Tradovate', fees:0, grade:null, review:null, outcome: (exitP > entry ? 'win' : 'loss')});
+  }
+
+  window._importPreview = preview;
+  document.getElementById('csv-feedback').innerHTML=`<span style="color:var(--green)">✓ ${pairs} trade pair(s) found — review and import below.</span>`;
+  document.getElementById('import-preview').innerHTML=`
+    <div class="card" style="margin-top:12px">
+      <div class="card-header"><span class="card-title">Preview — ${pairs} trade${pairs>1?'s':''}</span><button class="btn btn-green btn-sm" onclick="importAll()">Import all ↗</button></div>
+      ${preview.map((t,i)=>{
+        const pnl=calcPnL(t);
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
+          <span class="side-pill long-pill">LONG</span>
+          <strong>${t.ticker}</strong>
+          <span style="font-size:11px;color:var(--muted)">${t.datetime.slice(0,10)}</span>
+          <span style="font-size:12px;font-family:var(--mono)">${t.entry} → ${t.exit} × ${t.qty}</span>
+          <span style="margin-left:auto;font-weight:700;font-family:var(--mono)" class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</span>
+          <button class="btn btn-sm" onclick="importOne(${i})">Import ↗</button>
+        </div>`;
+      }).join('')}
+    </div>`;
 }
 function importOne(i){if(!window._importPreview?.[i])return;state.trades.push({...window._importPreview[i]});save();reviewTrade(state.trades.length-1);}
 function importAll(){if(!window._importPreview?.length)return;window._importPreview.forEach(t=>state.trades.push({...t}));save();go('history');}
