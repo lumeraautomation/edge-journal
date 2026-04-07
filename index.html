@@ -1970,6 +1970,8 @@ TRADER HISTORY CONTEXT (${prevTrades.length} prior trades):
 
   const prompt=`You are an expert ICT futures trading coach with access to this trader's full history. The trader scalps NQ/MNQ, NY session 9:30-11:00 EST only.
 
+CRITICAL TIMEZONE NOTE: The trader lives in CST (UTC-6). All timestamps in this journal are in CST. 8:34 CST = 9:34 EST which IS within the valid 9:30-11:00 EST session. NEVER flag a trade as "outside hours" without first converting the timestamp from CST to EST by adding 1 hour. A timestamp of 08:30-09:59 CST = 09:30-10:59 EST = VALID session time.
+
 STRATEGY: Mech Model (HTF sweep → inversion FVG entry → LRLR/eq highs/session HL targets) or Continuation (post-sweep pullback into FVG → inversion).
 Rules: Only 9:30–11:00 EST. Always wait for inversion FVG. Targets = low-resistance liquidity only.
 ${buildGradingContext()}
