@@ -2387,103 +2387,95 @@ function parseCSV(){
   const raw=document.getElementById('csv-raw').value.trim();
   if(!raw){alert('Paste CSV data first');return;}
 
-  // Parse CSV properly handling quoted fields
   function parseCSVLine(line) {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { inQuotes = !inQuotes; }
-      else if (ch === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
-      else { current += ch; }
+    const result=[]; let current=''; let inQuotes=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch==='"'){inQuotes=!inQuotes;}
+      else if(ch===','&&!inQuotes){result.push(current.trim());current='';}
+      else{current+=ch;}
     }
     result.push(current.trim());
     return result;
   }
 
-  const lines = raw.split('\n').filter(l => l.trim());
-  if (lines.length < 2) { document.getElementById('csv-feedback').innerHTML='<span style="color:var(--red)">Need at least 2 rows (header + data)</span>'; return; }
+  const csvLines=raw.split('\n').filter(l=>l.trim());
+  if(csvLines.length<2){document.getElementById('csv-feedback').innerHTML='<span style="color:var(--red)">Need at least 2 rows</span>';return;}
 
-  const rawHeaders = parseCSVLine(lines[0]);
-  const headers = rawHeaders.map(h => h.toLowerCase().replace(/[^a-z0-9]/g,''));
+  const rawHeaders=parseCSVLine(csvLines[0]);
+  const headers=rawHeaders.map(h=>h.toLowerCase().replace(/[\s._\/]/g,'').replace(/[^a-z0-9]/g,''));
+  const idx={};
+  headers.forEach((h,i)=>idx[h]=i);
 
-  const rows = lines.slice(1).map(l => {
-    const vals = parseCSVLine(l);
-    const r = {};
-    headers.forEach((h,i) => r[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
-    return r;
-  }).filter(r => Object.values(r).some(v => v));
-
-  // Tradovate uses: side, avgFillPrice, qty, filledTime, name, ordStatus/status
-  // Try to find the right columns
-  const getVal = (row, ...keys) => {
-    for (const k of keys) {
-      const norm = k.toLowerCase().replace(/[^a-z0-9]/g,'');
-      if (row[norm] !== undefined && row[norm] !== '') return row[norm];
+  const get=(row,keys)=>{
+    for(const k of keys){
+      const norm=k.toLowerCase().replace(/[\s._\/]/g,'').replace(/[^a-z0-9]/g,'');
+      if(idx[norm]!==undefined) return (row[idx[norm]]||'').replace(/^"|"$/g,'').trim();
     }
     return '';
   };
 
-  // Filter to filled orders only
-  const filled = rows.filter(r => {
-    const status = getVal(r,'ordStatus','status','orderStatus');
-    return !status || status.toLowerCase().includes('fill') || status.toLowerCase().includes('complete') || status === '';
-  });
+  const dataRows=csvLines.slice(1).map(l=>parseCSVLine(l)).filter(r=>r.some(v=>v.trim()));
+  const preview=[];
 
-  if (!filled.length) {
-    document.getElementById('csv-feedback').innerHTML='<span style="color:var(--red)">No filled orders found. Make sure you exported "Fills" from Tradovate, not orders.</span>';
+  // Detect Tradovate Position History format
+  const hasBuyPrice=idx['buyprice']!==undefined||idx['avgbuy']!==undefined;
+  const hasPL=idx['pl']!==undefined||idx['pandl']!==undefined||idx['pnl']!==undefined;
+
+  if(hasBuyPrice||hasPL){
+    dataRows.forEach(row=>{
+      if(!row.length||!row.some(v=>v)) return;
+      const contract=get(row,['Contract','contract','Product','product']);
+      const sym=contract.toUpperCase();
+      const ticker=sym.includes('MNQ')?'MNQ':sym.includes('NQ')?'NQ':sym.includes('MES')?'MES':sym.includes('ES')?'ES':'NQ';
+      const buyPrice=parseFloat(get(row,['Buy Price','Avg. Buy','AvgBuy','BuyPrice','avgbuy','buyprice']))||0;
+      const sellPrice=parseFloat(get(row,['Sell Price','Avg. Sell','AvgSell','SellPrice','avgsell','sellprice']))||0;
+      const qty=parseInt(get(row,['Paired Qty','pairedqty','Bought','bought','qty']))||1;
+      const pl=parseFloat(get(row,['P/L','pl','P&L','PnL','pnl','pandl']))||null;
+      const boughtTs=get(row,['Bought Timestamp','boughttimestamp']);
+      const soldTs=get(row,['Sold Timestamp','soldtimestamp']);
+      const tradeDate=get(row,['Trade Date','tradedate','Timestamp','timestamp']);
+      let side='long';
+      if(boughtTs&&soldTs){ side=new Date(boughtTs)<=new Date(soldTs)?'long':'short'; }
+      const entry=side==='long'?buyPrice:sellPrice;
+      const exitP=side==='long'?sellPrice:buyPrice;
+      let dt=boughtTs||soldTs||tradeDate||'';
+      // Convert MM/DD/YYYY HH:MM:SS to ISO
+      dt=dt.replace(/(\d+)\/(\d+)\/(\d+)\s(.+)/,'$3-$1-$2T$4').slice(0,16);
+      if(!dt) dt=new Date().toISOString().slice(0,16);
+      if(!entry&&!pl) return;
+      const outcome=(pl!==null)?(pl>0?'win':pl<0?'loss':'be_win'):(exitP>entry?'win':'loss');
+      preview.push({ticker,side,entry,exit:exitP,qty,datetime:dt,setups:[],mistakes:[],notes:'Imported from Tradovate',fees:0,grade:null,review:null,outcome,...(pl!==null?{quickMode:true,quickPnL:pl,quickRR:null}:{})});
+    });
+  } else {
+    const filled=dataRows.filter(r=>{const s=get(r,['status','ordStatus','orderStatus']);return !s||s.toLowerCase().includes('fill')||s.toLowerCase().includes('complete');});
+    const buys=filled.filter(r=>get(r,['side','action','buySell']).toLowerCase().includes('buy'));
+    const sells=filled.filter(r=>get(r,['side','action','buySell']).toLowerCase().includes('sell'));
+    const pairs=Math.min(buys.length,sells.length);
+    for(let i=0;i<pairs;i++){
+      const sym=(get(buys[i],['name','symbol','contract'])||'NQ').toUpperCase();
+      const ticker=sym.includes('MNQ')?'MNQ':sym.includes('NQ')?'NQ':sym.includes('MES')?'MES':'NQ';
+      const entry=parseFloat(get(buys[i],['avgfillprice','avgprice','price']))||0;
+      const exitP=parseFloat(get(sells[i],['avgfillprice','avgprice','price']))||0;
+      const qty=parseInt(get(buys[i],['qty','quantity']))||1;
+      let dt=get(buys[i],['filledtime','filltime','timestamp','date']);
+      dt=dt.replace('Z','').slice(0,16);
+      preview.push({ticker,side:'long',entry,exit:exitP,qty,datetime:dt,setups:[],mistakes:[],notes:'Imported from Tradovate',fees:0,grade:null,review:null,outcome:exitP>entry?'win':'loss'});
+    }
+  }
+
+  if(!preview.length){
+    document.getElementById('csv-feedback').innerHTML=`<span style="color:var(--red)">No trades found. Headers: ${rawHeaders.join(', ')}</span>`;
+    document.getElementById('import-preview').innerHTML='';
     return;
   }
 
-  // Separate buys and sells
-  const buys = filled.filter(r => {
-    const side = getVal(r,'side','action','buySell','direction');
-    return side.toLowerCase().includes('buy') || side.toLowerCase() === 'b';
-  });
-  const sells = filled.filter(r => {
-    const side = getVal(r,'side','action','buySell','direction');
-    return side.toLowerCase().includes('sell') || side.toLowerCase() === 's';
-  });
-
-  if (!buys.length || !sells.length) {
-    document.getElementById('csv-feedback').innerHTML=`<span style="color:var(--red)">Found ${filled.length} rows but couldn't separate buys/sells. Headers found: ${rawHeaders.join(', ')}</span>`;
-    return;
-  }
-
-  const pairs = Math.min(buys.length, sells.length);
-  const preview = [];
-
-  for (let i = 0; i < pairs; i++) {
-    const b = buys[i], s = sells[i];
-    const sym = (getVal(b,'name','symbol','contract','instrument')||'NQ').toUpperCase();
-    const ticker = sym.includes('MNQ')?'MNQ':sym.includes('NQ')?'NQ':sym.includes('MES')?'MES':sym.includes('ES')?'ES':'NQ';
-    const entry = parseFloat(getVal(b,'avgfillprice','avgprice','fillprice','price','filledprice'))||0;
-    const exitP = parseFloat(getVal(s,'avgfillprice','avgprice','fillprice','price','filledprice'))||0;
-    const qty = parseInt(getVal(b,'qty','quantity','fillqty','filledqty'))||1;
-    let dt = getVal(b,'filledtime','filltime','timestamp','datetime','date','time','placedtime');
-    // Normalize datetime
-    dt = dt.replace('Z','').replace('T',' ').slice(0,16);
-    if (!dt) { const now = new Date(); dt = now.toISOString().slice(0,16); }
-    preview.push({ticker, side:'long', entry, exit:exitP, qty, datetime:dt, setups:[], mistakes:[], notes:'Imported from Tradovate', fees:0, grade:null, review:null, outcome: (exitP > entry ? 'win' : 'loss')});
-  }
-
-  window._importPreview = preview;
-  document.getElementById('csv-feedback').innerHTML=`<span style="color:var(--green)">✓ ${pairs} trade pair(s) found — review and import below.</span>`;
+  window._importPreview=preview;
+  document.getElementById('csv-feedback').innerHTML=`<span style="color:var(--green)">✓ ${preview.length} trade${preview.length>1?'s':''} found — review and import below.</span>`;
   document.getElementById('import-preview').innerHTML=`
     <div class="card" style="margin-top:12px">
-      <div class="card-header"><span class="card-title">Preview — ${pairs} trade${pairs>1?'s':''}</span><button class="btn btn-green btn-sm" onclick="importAll()">Import all ↗</button></div>
-      ${preview.map((t,i)=>{
-        const pnl=calcPnL(t);
-        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
-          <span class="side-pill long-pill">LONG</span>
-          <strong>${t.ticker}</strong>
-          <span style="font-size:11px;color:var(--muted)">${t.datetime.slice(0,10)}</span>
-          <span style="font-size:12px;font-family:var(--mono)">${t.entry} → ${t.exit} × ${t.qty}</span>
-          <span style="margin-left:auto;font-weight:700;font-family:var(--mono)" class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</span>
-          <button class="btn btn-sm" onclick="importOne(${i})">Import ↗</button>
-        </div>`;
-      }).join('')}
+      <div class="card-header"><span class="card-title">Preview — ${preview.length} trade${preview.length>1?'s':''}</span><button class="btn btn-green btn-sm" onclick="importAll()">Import all ↗</button></div>
+      ${preview.map((t,i)=>{const pnl=calcPnL(t);return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap"><span class="side-pill ${t.side==='long'?'long-pill':'short-pill'}">${t.side.toUpperCase()}</span><strong>${t.ticker}</strong><span style="font-size:11px;color:var(--muted)">${t.datetime.slice(0,16).replace('T',' ')}</span><span style="font-size:12px;font-family:var(--mono)">${t.entry||'—'} → ${t.exit||'—'} ×${t.qty}</span><span style="margin-left:auto;font-weight:700;font-family:var(--mono)" class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</span><button class="btn btn-sm" onclick="importOne(${i})">Import</button></div>`;}).join('')}
     </div>`;
 }
 function importOne(i){if(!window._importPreview?.[i])return;state.trades.push({...window._importPreview[i]});save();reviewTrade(state.trades.length-1);}
