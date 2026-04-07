@@ -894,13 +894,13 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
         <div class="qe-field"><label>Ticker</label><input id="q-ticker" placeholder="NQ" value="NQ"></div>
         <div class="qe-field"><label>P&amp;L ($)</label><input id="q-quick-pnl" type="number" placeholder="+500 or -250"></div>
-        <div class="qe-field"><label>R:R</label><input id="q-quick-rr" type="number" step="0.1" placeholder="e.g. 2.5"></div>
+        <div class="qe-field"><label>R:R</label><input id="q-quick-rr" type="number" step="0.1" placeholder="e.g. 2.0" min="-5"></div>
         <div class="qe-field"><label>Date &amp; Time</label><input id="q-datetime" type="datetime-local"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
         <div class="qe-field"><label>Setup</label><select id="q-setup"><option value="">— setup —</option></select></div>
         <div class="qe-field"><label>Outcome</label>
-          <select id="q-outcome">
+          <select id="q-outcome" onchange="autoFillRR()">
             <option value="">— outcome —</option>
             <option value="win">Win</option>
             <option value="loss">Loss</option>
@@ -3191,6 +3191,14 @@ function fullLogGated() {
 function toggleMore(el) {
   el.classList.toggle('open');
   document.getElementById('more-submenu').classList.toggle('open');
+}
+
+function autoFillRR() {
+  const outcome = document.getElementById('q-outcome')?.value;
+  const rrEl = document.getElementById('q-quick-rr');
+  if (!rrEl) return;
+  if (outcome === 'loss' && !rrEl.value) rrEl.value = '-1';
+  if ((outcome === 'be_win' || outcome === 'be_loss') && !rrEl.value) rrEl.value = '0';
 }
 
 // ─── LOG MODE TOGGLE ──────────────────────────────────────────────────────────
