@@ -1981,6 +1981,7 @@ ${t.ticker} ${t.side.toUpperCase()} | ${t.datetime||'unknown'} | Entry:${t.entry
 Stop:${t.sl||'none'} Target:${t.tp||'none'} P&L:$${Math.round(pnl)} R:R:${rr||'?'}
 Pre-tagged setups: ${t.setups?.join(',')||'none'} | Pre-tagged mistakes: ${t.mistakes?.join(',')||'none'} | Outcome: ${t.outcome?{win:'Win',loss:'Loss',be_win:'BE → Win',be_loss:'BE → Loss'}[t.outcome]:'not specified'}
 Notes: ${t.notes||'none'}
+${t.notes?.includes('Imported from Tradovate') || t.quickMode ? 'DATA NOTE: This trade was imported automatically from Tradovate — stop loss and target data are not available because they were not in the export. Do NOT penalize for missing SL/TP. Focus grading on what is known: the entry, exit, outcome, setup type, and timing. A loss without a visible SL does not mean the SL was ignored — it simply was not exported.' : ''}
 ${histContext}
 
 Respond in this EXACT JSON format only, no other text:
