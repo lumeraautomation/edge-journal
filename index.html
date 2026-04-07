@@ -696,6 +696,9 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
   <div class="nav-item" onclick="go('history')">
     <svg viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h8M2 12h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>History
   </div>
+  <div class="nav-item" onclick="go('propfirms')">
+    <svg viewBox="0 0 16 16" fill="none"><rect x="1" y="5" width="14" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 5V3.5A1.5 1.5 0 016.5 2h3A1.5 1.5 0 0111 3.5V5" stroke="currentColor" stroke-width="1.4"/><path d="M1 9h14" stroke="currentColor" stroke-width="1.4"/></svg>Prop Firms
+  </div>
   <div class="nav-item" onclick="goPro('copilot')">
     <svg viewBox="0 0 16 16" fill="none"><path d="M2 8a6 6 0 1112 0A6 6 0 012 8z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="currentColor" opacity=".6"/></svg>AI Copilot<span class="nav-pro-lock" id="lock-copilot">⚡</span>
   </div>
@@ -784,6 +787,20 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div class="metric"><div class="metric-label">Avg Win</div><div class="metric-val pos" id="m-avgw">—</div><div class="metric-sub" id="m-avgl-sub">avg loss —</div></div>
     <div class="metric"><div class="metric-label">Avg R:R</div><div class="metric-val" id="m-rr">—</div><div class="metric-sub">planned</div></div>
     <div class="metric"><div class="metric-label">Max Drawdown</div><div class="metric-val neg" id="m-dd">—</div><div class="metric-sub">peak→trough</div></div>
+  </div>
+
+  <!-- PROP FIRM SUMMARY ON DASHBOARD -->
+  <div class="card" id="dash-prop-card" style="display:none">
+    <div class="card-header">
+      <span class="card-title">Prop Firm Accounts</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="dash-prop-filter" class="btn btn-sm" style="font-size:11px" onchange="renderDashPropSummary()">
+          <option value="all">All firms</option>
+        </select>
+        <button class="btn btn-sm" onclick="go('propfirms')">Manage →</button>
+      </div>
+    </div>
+    <div id="dash-prop-body"></div>
   </div>
 
   <div class="card span2">
@@ -890,6 +907,18 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
         </select>
       </div>
     </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" id="prop-account-selectors">
+      <div class="qe-field"><label>Prop Firm <span style="color:var(--dim);font-weight:400;font-size:11px">— optional</span></label>
+        <select id="q-prop-firm" onchange="updateLogAccountOptions()">
+          <option value="">— none / personal —</option>
+        </select>
+      </div>
+      <div class="qe-field" id="q-prop-account-wrap" style="display:none"><label>Account</label>
+        <select id="q-prop-account">
+          <option value="">— select account —</option>
+        </select>
+      </div>
+    </div>
 
     <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:16px">
       <div class="modal-field" style="margin-bottom:12px"><label>Notes / thesis <span style="color:var(--dim);font-weight:400;font-size:11px">— optional</span></label><textarea id="full-notes" placeholder="What was the setup? Why did you take it? How did it play out?" style="min-height:70px"></textarea></div>
@@ -958,7 +987,7 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
     <div style="overflow-x:auto">
       <table class="trades-table">
         <thead><tr>
-          <th>Date / Time</th><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>Fees</th><th>P&amp;L</th><th>Outcome</th><th>R:R</th><th>Setup</th><th>Mistakes</th><th style="text-align:center;color:var(--text)">Grade</th><th></th>
+          <th>Date / Time</th><th>Ticker</th><th>Side</th><th>Entry</th><th>Exit</th><th>Qty</th><th>Fees</th><th>P&amp;L</th><th>Outcome</th><th>R:R</th><th>Firm</th><th>Setup</th><th>Mistakes</th><th style="text-align:center;color:var(--text)">Grade</th><th></th>
         </tr></thead>
         <tbody id="history-body"></tbody>
       </table>
@@ -1022,6 +1051,133 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       </div>
     </div>
     <div id="gallery-grid" class="gallery-grid"></div>
+  </div>
+</div>
+
+<!-- PROP FIRMS -->
+<div class="page" id="page-propfirms">
+  <div class="page-header">
+    <div><div class="page-title">Prop Firms</div><div class="page-sub">Track all your accounts, payouts, and performance across every firm</div></div>
+    <button class="btn btn-green" onclick="openPropAccountModal()">+ Add Account</button>
+  </div>
+
+  <!-- COMBINED STATS -->
+  <div class="metrics" id="prop-combined-metrics" style="grid-template-columns:repeat(5,minmax(0,1fr));margin-bottom:16px">
+    <div class="metric"><div class="metric-label">Combined P&L</div><div class="metric-val" id="pc-pnl">$0</div><div class="metric-sub" id="pc-pnl-sub">all accounts</div></div>
+    <div class="metric"><div class="metric-label">Total Payouts</div><div class="metric-val pos" id="pc-payouts">$0</div><div class="metric-sub">withdrawn</div></div>
+    <div class="metric"><div class="metric-label">Total Fees</div><div class="metric-val neg" id="pc-fees">$0</div><div class="metric-sub">eval + activation</div></div>
+    <div class="metric"><div class="metric-label">Net Profit</div><div class="metric-val" id="pc-net">$0</div><div class="metric-sub">payouts − fees</div></div>
+    <div class="metric"><div class="metric-label">Active Accounts</div><div class="metric-val" id="pc-active">0</div><div class="metric-sub" id="pc-blown-sub">0 blown</div></div>
+  </div>
+
+  <!-- ACCOUNTS BY FIRM -->
+  <div id="prop-accounts-section"></div>
+
+  <!-- ADD PAYOUT -->
+  <div class="card" style="margin-top:8px">
+    <div class="card-header">
+      <span class="card-title">Payouts</span>
+      <button class="btn btn-sm" onclick="openPayoutModal()">+ Log Payout</button>
+    </div>
+    <div id="prop-payouts-list"><div class="empty">No payouts logged yet</div></div>
+  </div>
+</div>
+
+<!-- PROP ACCOUNT MODAL -->
+<div class="modal-overlay" id="prop-account-modal" onclick="if(event.target===this)closePropAccountModal()">
+  <div class="modal" style="width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title" id="prop-modal-title">Add Prop Account</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="modal-field">
+        <label class="modal-label">Prop Firm</label>
+        <select class="modal-select" id="pa-firm" onchange="updatePropPlanOptions()">
+          <option value="">— select firm —</option>
+          <option value="Lucid">Lucid</option>
+          <option value="Alpha Futures">Alpha Futures</option>
+          <option value="Apex Funding">Apex Funding</option>
+          <option value="Topstep">Topstep</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Plan / Type</label>
+        <select class="modal-select" id="pa-plan" onchange="updatePropSizeOptions()">
+          <option value="">— select plan —</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Account Size</label>
+        <select class="modal-select" id="pa-size" onchange="autoFillPropRules()">
+          <option value="">— select size —</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Account Name / Nickname</label>
+        <input class="modal-input" id="pa-name" placeholder="e.g. Alpha #1, Lucid Main">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Status</label>
+        <select class="modal-select" id="pa-status">
+          <option value="eval">Evaluation</option>
+          <option value="funded">Funded / PA</option>
+          <option value="passed">Passed — awaiting funded</option>
+          <option value="blown">Blown</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label class="modal-label">Current P&L ($)</label>
+        <input class="modal-input" id="pa-pnl" type="number" placeholder="0" value="0">
+      </div>
+    </div>
+
+    <!-- AUTO-FILLED RULES (editable) -->
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:10px;letter-spacing:.04em;text-transform:uppercase">Account Rules</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="modal-field"><label class="modal-label">Profit Target ($)</label><input class="modal-input" id="pa-target" type="number" placeholder="—"></div>
+        <div class="modal-field"><label class="modal-label">Max Drawdown ($)</label><input class="modal-input" id="pa-dd" type="number" placeholder="—"></div>
+        <div class="modal-field"><label class="modal-label">Daily Loss Limit ($)</label><input class="modal-input" id="pa-dll" type="number" placeholder="—"></div>
+        <div class="modal-field"><label class="modal-label">Eval Fee ($)</label><input class="modal-input" id="pa-fee" type="number" placeholder="0"></div>
+        <div class="modal-field"><label class="modal-label">Activation Fee ($)</label><input class="modal-input" id="pa-activation" type="number" placeholder="0"></div>
+        <div class="modal-field"><label class="modal-label">Profit Split %</label><input class="modal-input" id="pa-split" type="number" placeholder="e.g. 90"></div>
+        <div class="modal-field"><label class="modal-label">Min Trading Days</label><input class="modal-input" id="pa-mindays" type="number" placeholder="—"></div>
+        <div class="modal-field"><label class="modal-label">Max Contracts</label><input class="modal-input" id="pa-maxcts" placeholder="e.g. 5 mini / 50 micro"></div>
+        <div class="modal-field"><label class="modal-label">Drawdown Type</label>
+          <select class="modal-select" id="pa-ddtype">
+            <option value="EOD">End of Day (EOD)</option>
+            <option value="Intraday">Intraday Trail</option>
+            <option value="Static">Static</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-field" style="margin-top:10px"><label class="modal-label">Notes</label><textarea class="modal-input" id="pa-notes" style="min-height:50px;resize:vertical" placeholder="Reset history, scaling plan, anything relevant..."></textarea></div>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-green" style="flex:1;justify-content:center" onclick="savePropAccount()">Save Account</button>
+      <button class="btn" onclick="closePropAccountModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYOUT MODAL -->
+<div class="modal-overlay" id="prop-payout-modal" onclick="if(event.target===this)document.getElementById('prop-payout-modal').classList.remove('open')">
+  <div class="modal" style="width:420px">
+    <div class="modal-title">Log Payout</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="modal-field"><label class="modal-label">Account</label>
+        <select class="modal-select" id="po-account"><option value="">— select account —</option></select>
+      </div>
+      <div class="modal-field"><label class="modal-label">Amount ($)</label><input class="modal-input" id="po-amount" type="number" placeholder="e.g. 500"></div>
+      <div class="modal-field"><label class="modal-label">Date</label><input class="modal-input" id="po-date" type="date"></div>
+      <div class="modal-field"><label class="modal-label">Note</label><input class="modal-input" id="po-note" placeholder="Optional"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-green" style="flex:1;justify-content:center" onclick="savePropPayout()">Log Payout</button>
+      <button class="btn" onclick="document.getElementById('prop-payout-modal').classList.remove('open')">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -1429,7 +1585,9 @@ let state = {
   routines: [],
   selectedSide: 'long',
   selectedSetups: [],
-  selectedMistakes: []
+  selectedMistakes: [],
+  propAccounts: [],   // user's prop firm accounts
+  propPayouts: []     // logged payouts
 };
 
 // Load from localStorage as fallback while Firebase initialises
@@ -1449,7 +1607,9 @@ function save() {
       playbook: state.playbook,
       rules: state.rules,
       routines: state.routines,
-      gradingCriteria: state.gradingCriteria || {}
+      gradingCriteria: state.gradingCriteria || {},
+      propAccounts: state.propAccounts || [],
+      propPayouts: state.propPayouts || []
     }).then(()=>{ if(dot) dot.className='sync-dot'; }).catch(()=>{ if(dot) dot.className='sync-dot'; });
   }
 }
@@ -1464,12 +1624,14 @@ window._mergeCloudData = function(cloudData) {
   state.rules = cloudData.rules || state.rules;
   state.routines = cloudData.routines || state.routines;
   state.gradingCriteria = cloudData.gradingCriteria || state.gradingCriteria || {};
+  state.propAccounts = cloudData.propAccounts || state.propAccounts || [];
+  state.propPayouts = cloudData.propPayouts || state.propPayouts || [];
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e){}
   if (typeof updateProUI === 'function') updateProUI();
 };
 
 // ─── NAV ──────────────────────────────────────────────────────────────────────
-const PAGE_ORDER = ['dashboard','log','history','copilot','setups','mistakes','insights','routine','rules','tilt','risk','streaks','playbook'];
+const PAGE_ORDER = ['dashboard','log','history','propfirms','copilot','setups','mistakes','insights','routine','rules','tilt','risk','streaks','playbook'];
 function go(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1478,6 +1640,7 @@ function go(page) {
   const idx = PAGE_ORDER.indexOf(page);
   const navItems = document.querySelectorAll('.nav-item');
   if (navItems[idx]) navItems[idx].classList.add('active');
+  if (page==='propfirms') renderPropFirmsPage();
   if (page==='dashboard') renderDashboard();
   if (page==='history') renderHistory();
   if (page==='setups') { renderSetupAnalytics(); renderGallery(); }
@@ -1563,7 +1726,7 @@ function renderDashboard() {
   renderHourHeat(T);
   renderRecent();
   refreshPatternFeed();
-  // Gate pattern feed for free users
+  renderDashPropSummary();
   setTimeout(()=>{ applyProGate('pattern-feed', 'Live Pattern Feed is Pro', 'Upgrade to see real-time insights like "You lose 72% of trades after 11AM" and "FOMO has cost you $840."'); }, 100);
 }
 
@@ -1630,6 +1793,7 @@ function renderLogPage() {
   if(dtEl&&!dtEl.value) dtEl.value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
   state.selectedSetups=[]; state.selectedMistakes=[];
   renderTagSelectors();
+  updateLogPropOptions();
 }
 
 function renderTagSelectors() {
@@ -1656,11 +1820,13 @@ function buildTrade(withNotes) {
   const datetime=document.getElementById('q-datetime').value;
   const setup=document.getElementById('q-setup').value;
   const outcome=document.getElementById('q-outcome').value;
+  const propFirm=document.getElementById('q-prop-firm')?.value||'';
+  const propAccount=document.getElementById('q-prop-account')?.value||'';
   if(!entry||!exit){alert('Entry and exit price required');return null;}
   const setups=withNotes?[...state.selectedSetups]:(setup?[setup]:[]);
   const mistakes=withNotes?[...state.selectedMistakes]:[];
   const notes=withNotes?(document.getElementById('full-notes').value||''):'';
-  return {ticker,side:state.selectedSide,entry,exit,qty,sl,tp,fees,datetime,outcome,setups,mistakes,notes,grade:null,review:null};
+  return {ticker,side:state.selectedSide,entry,exit,qty,sl,tp,fees,datetime,outcome,propFirm,propAccount,setups,mistakes,notes,grade:null,review:null};
 }
 
 function quickLog(){const t=buildTrade(false);if(!t)return;state.trades.push(t);save();document.getElementById('q-entry').value='';document.getElementById('q-exit').value='';reviewTrade(state.trades.length-1);}
@@ -1887,6 +2053,7 @@ function renderHistory() {
       <td><strong class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</strong></td>
       <td>${t.outcome?`<span class="tag-pill ${t.outcome==='win'?'setup-pill':t.outcome==='loss'?'mistake-pill':'amber-pill'}">${{win:'Win',loss:'Loss',be_win:'BE → Win',be_loss:'BE → Loss'}[t.outcome]}</span>`:'<span style="color:var(--dim)">—</span>'}</td>
       <td style="color:var(--muted)">${rr?rr+'R':'—'}</td>
+      <td style="color:var(--muted);font-size:11px">${t.propFirm?`<span style="color:var(--text);font-size:11px">${t.propFirm}</span>${t.propAccount?`<br><span style="color:var(--dim)">${t.propAccount}</span>`:''}` : '<span style="color:var(--dim)">—</span>'}</td>
       <td>${(t.setups||[]).map(s=>`<span class="tag-pill setup-pill">${s}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
       <td>${(t.mistakes||[]).map(m=>`<span class="tag-pill mistake-pill">${m}</span>`).join('')||'<span style="color:var(--dim)">—</span>'}</td>
       <td style="text-align:center">${t.grade?`<span class="grade-badge grade-${t.grade}">${t.grade}</span>`:'<span style="color:var(--dim);font-size:18px;font-weight:700">—</span>'}</td>
@@ -3191,6 +3358,452 @@ function openPhotoViewer(src) {
   document.getElementById('photo-viewer').style.display = 'flex';
 }
 
+// ─── PROP FIRM DATA ───────────────────────────────────────────────────────────
+const PROP_FIRMS = {
+  'Lucid': {
+    plans: {
+      'Pro Eval': {
+        sizes: ['25K','50K','100K','150K'],
+        rules: {
+          '25K':  {target:1250,dd:1000,dll:0,    fee:94.50, activation:0, split:null, minDays:1, maxCts:'2 mini / 20 micro', ddType:'EOD', resetFee:90},
+          '50K':  {target:3000,dd:2000,dll:1200,  fee:129.50,activation:0, split:null, minDays:1, maxCts:'4 mini / 40 micro', ddType:'EOD', resetFee:120},
+          '100K': {target:6000,dd:3000,dll:1800,  fee:199.50,activation:0, split:null, minDays:1, maxCts:'6 mini / 60 micro', ddType:'EOD', resetFee:180},
+          '150K': {target:9000,dd:4500,dll:2700,  fee:259,   activation:0, split:null, minDays:1, maxCts:'10 mini / 100 micro',ddType:'EOD', resetFee:245}
+        },
+        fundedNotes: '40% consistency · Days to payout: 3 · 5 payouts to live · Activation free'
+      },
+      'Flex Eval': {
+        sizes: ['25K','50K','100K','150K'],
+        rules: {
+          '25K':  {target:1250,dd:1000,dll:0,fee:70,   activation:0, split:null, minDays:1, maxCts:'2 mini / 20 micro', ddType:'EOD', resetFee:60},
+          '50K':  {target:3000,dd:2000,dll:0,fee:98,   activation:0, split:null, minDays:1, maxCts:'4 mini / 40 micro', ddType:'EOD', resetFee:95},
+          '100K': {target:6000,dd:3000,dll:0,fee:157.50,activation:0,split:null, minDays:1, maxCts:'6 mini / 60 micro', ddType:'EOD', resetFee:140},
+          '150K': {target:9000,dd:4500,dll:0,fee:294,  activation:0, split:null, minDays:1, maxCts:'10 mini / 100 micro',ddType:'EOD', resetFee:280}
+        },
+        fundedNotes: 'No consistency in funded · 5 days of min profit days · Scaling plan · 5 payouts to live'
+      },
+      'Direct (Straight to Funded)': {
+        sizes: ['25K','50K','100K','150K'],
+        rules: {
+          '25K':  {target:0,dd:1000,dll:0,    fee:238,activation:0,split:null,minDays:5,maxCts:'2 mini / 20 micro',ddType:'EOD'},
+          '50K':  {target:0,dd:2000,dll:1200, fee:364,activation:0,split:null,minDays:5,maxCts:'4 mini / 40 micro',ddType:'EOD'},
+          '100K': {target:0,dd:3500,dll:2100, fee:490,activation:0,split:null,minDays:5,maxCts:'6 mini / 60 micro',ddType:'EOD'},
+          '150K': {target:0,dd:5000,dll:3000, fee:588,activation:0,split:null,minDays:5,maxCts:'10 mini / 100 micro',ddType:'EOD'}
+        },
+        fundedNotes: '20% consistency · LucidScale DLL above initial trail: 60% peak EOD · Max 5 accounts'
+      }
+    }
+  },
+  'Alpha Futures': {
+    plans: {
+      'Zero Plan': {
+        sizes: ['25K','50K','100K'],
+        rules: {
+          '25K':  {target:1500,dd:1000,dll:500, fee:79, activation:0,   split:90, minDays:1, maxCts:'1 contract', ddType:'Static', resetFee:69},
+          '50K':  {target:3000,dd:2000,dll:1000,fee:119,activation:0,   split:90, minDays:1, maxCts:'3 contracts',ddType:'Static', resetFee:109},
+          '100K': {target:6000,dd:3000,dll:2000,fee:239,activation:0,   split:90, minDays:1, maxCts:'6 contracts',ddType:'Static', resetFee:219}
+        },
+        fundedNotes: 'Monthly sub · 5 min days in funded · 90% split · 40% consistency · Max 5 accounts · DLL same as eval'
+      },
+      'Standard Plan': {
+        sizes: ['50K','100K','150K'],
+        rules: {
+          '50K':  {target:3000,dd:2000,dll:0,   fee:79, activation:0, split:90, minDays:2, maxCts:'5 contracts', ddType:'Static', resetFee:59},
+          '100K': {target:6000,dd:4000,dll:0,   fee:159,activation:0, split:90, minDays:2, maxCts:'10 contracts',ddType:'Static', resetFee:129},
+          '150K': {target:9000,dd:6000,dll:0,   fee:239,activation:0, split:90, minDays:2, maxCts:'15 contracts',ddType:'Static', resetFee:199}
+        },
+        fundedNotes: 'Monthly sub · 3 min days funded · 70-90% split · 40% consistency · Scaling to max contracts · DLL $1K/$2K/$3K in funded · Max 3 accounts'
+      },
+      'Advanced Plan': {
+        sizes: ['50K','100K','150K'],
+        rules: {
+          '50K':  {target:4000,dd:1750,dll:0,   fee:139,activation:0, split:90, minDays:2, maxCts:'5 contracts', ddType:'Static', resetFee:139},
+          '100K': {target:8000,dd:3500,dll:0,   fee:279,activation:0, split:90, minDays:2, maxCts:'10 contracts',ddType:'Static', resetFee:279},
+          '150K': {target:12000,dd:5250,dll:0,  fee:419,activation:0, split:90, minDays:2, maxCts:'15 contracts',ddType:'Static', resetFee:419}
+        },
+        fundedNotes: 'Monthly sub · 5 min days funded · 90% split · No consistency · No scaling · No DLL · Max 3 accounts'
+      }
+    }
+  },
+  'Apex Funding': {
+    plans: {
+      'EOD Trail': {
+        sizes: ['25K','50K','100K','150K'],
+        rules: {
+          '25K':  {target:1500,dd:1000,dll:500, fee:29.90,activation:0,split:null,minDays:1,maxCts:'4 mini / 40 micro',ddType:'EOD'},
+          '50K':  {target:3000,dd:2000,dll:1000,fee:34.90,activation:0,split:null,minDays:1,maxCts:'6 mini / 60 micro',ddType:'EOD'},
+          '100K': {target:6000,dd:3000,dll:1500,fee:59.90,activation:0,split:null,minDays:1,maxCts:'8 mini / 80 micro',ddType:'EOD'},
+          '150K': {target:9000,dd:4000,dll:2000,fee:79.90,activation:0,split:null,minDays:1,maxCts:'12 mini / 120 micro',ddType:'EOD'}
+        },
+        fundedNotes: 'One-time fee · 30 day eval window · No resets · Scaling built-in for PA'
+      },
+      'Intraday Trail': {
+        sizes: ['25K','50K','100K','150K'],
+        rules: {
+          '25K':  {target:1500,dd:1000,dll:0,fee:19.90,activation:0,split:null,minDays:1,maxCts:'4 mini / 40 micro',ddType:'Intraday'},
+          '50K':  {target:3000,dd:2000,dll:0,fee:24.90,activation:0,split:null,minDays:1,maxCts:'6 mini / 60 micro',ddType:'Intraday'},
+          '100K': {target:6000,dd:3000,dll:0,fee:39.90,activation:0,split:null,minDays:1,maxCts:'8 mini / 80 micro',ddType:'Intraday'},
+          '150K': {target:9000,dd:4000,dll:0,fee:59.90,activation:0,split:null,minDays:1,maxCts:'12 mini / 120 micro',ddType:'Intraday'}
+        },
+        fundedNotes: 'One-time fee · 30 day eval window · No resets · Scaling built-in for PA'
+      }
+    }
+  },
+  'Topstep': {
+    plans: {
+      'Standard (with activation)': {
+        sizes: ['50K','100K','150K'],
+        rules: {
+          '50K':  {target:3000,dd:2000,dll:0,fee:49,  activation:149,split:90,minDays:null,maxCts:'5 contracts', ddType:'EOD', resetFee:49},
+          '100K': {target:6000,dd:3000,dll:0,fee:99,  activation:149,split:90,minDays:null,maxCts:'10 contracts',ddType:'EOD', resetFee:99},
+          '150K': {target:9000,dd:4500,dll:0,fee:149, activation:149,split:90,minDays:null,maxCts:'15 contracts',ddType:'EOD', resetFee:149}
+        },
+        fundedNotes: 'Monthly sub · $149 Express Funded activation · 90% profit split'
+      },
+      'No Activation Fee': {
+        sizes: ['50K','100K','150K'],
+        rules: {
+          '50K':  {target:3000,dd:2000,dll:0,fee:109,activation:0,split:90,minDays:null,maxCts:'5 contracts', ddType:'EOD', resetFee:109},
+          '100K': {target:6000,dd:3000,dll:0,fee:159,activation:0,split:90,minDays:null,maxCts:'10 contracts',ddType:'EOD', resetFee:159},
+          '150K': {target:9000,dd:4500,dll:0,fee:209,activation:0,split:90,minDays:null,maxCts:'15 contracts',ddType:'EOD', resetFee:209}
+        },
+        fundedNotes: 'Monthly sub · No activation fee · 90% profit split'
+      }
+    }
+  }
+};
+
+// ─── PROP FIRM PAGE ───────────────────────────────────────────────────────────
+let editingPropIdx = -1;
+
+function renderPropFirmsPage() {
+  renderPropCombinedStats();
+  renderPropAccountsSection();
+  renderPropPayouts();
+  populatePayoutAccountSelect();
+}
+
+function renderPropCombinedStats() {
+  const accounts = state.propAccounts || [];
+  const payouts = state.propPayouts || [];
+  const active = accounts.filter(a => a.status !== 'blown' && a.status !== 'inactive');
+  const blown = accounts.filter(a => a.status === 'blown');
+  const totalPnL = accounts.reduce((s,a) => s + (parseFloat(a.pnl)||0), 0);
+  const totalPayouts = payouts.reduce((s,p) => s + (parseFloat(p.amount)||0), 0);
+  const totalFees = accounts.reduce((s,a) => s + (parseFloat(a.fee)||0) + (parseFloat(a.activation)||0), 0);
+  const net = totalPayouts - totalFees;
+
+  const pnlEl = document.getElementById('pc-pnl');
+  pnlEl.textContent = (totalPnL>=0?'+$':'-$') + Math.abs(totalPnL).toLocaleString();
+  pnlEl.className = 'metric-val ' + (totalPnL>=0?'pos':'neg');
+  document.getElementById('pc-payouts').textContent = '+$' + totalPayouts.toLocaleString();
+  document.getElementById('pc-fees').textContent = '-$' + totalFees.toLocaleString();
+  const netEl = document.getElementById('pc-net');
+  netEl.textContent = (net>=0?'+$':'-$') + Math.abs(net).toLocaleString();
+  netEl.className = 'metric-val ' + (net>=0?'pos':'neg');
+  document.getElementById('pc-active').textContent = active.length;
+  document.getElementById('pc-blown-sub').textContent = blown.length + ' blown';
+}
+
+function renderPropAccountsSection() {
+  const section = document.getElementById('prop-accounts-section');
+  const accounts = state.propAccounts || [];
+  if (!accounts.length) {
+    section.innerHTML = '<div class="card"><div class="empty"><strong>No accounts yet</strong>Add your first prop firm account to start tracking.</div></div>';
+    return;
+  }
+
+  // Group by firm
+  const byFirm = {};
+  accounts.forEach((a,i) => {
+    if (!byFirm[a.firm]) byFirm[a.firm] = [];
+    byFirm[a.firm].push({...a, _idx:i});
+  });
+
+  const statusColor = {eval:'var(--amber)',funded:'var(--green)',passed:'var(--blue)',blown:'var(--red)',inactive:'var(--dim)'};
+  const statusLabel = {eval:'Eval',funded:'Funded',passed:'Passed',blown:'Blown',inactive:'Inactive'};
+
+  section.innerHTML = Object.entries(byFirm).map(([firm, accs]) => {
+    const firmPnL = accs.reduce((s,a)=>s+(parseFloat(a.pnl)||0),0);
+    const firmPayouts = (state.propPayouts||[]).filter(p=>accs.some(a=>a.name===p.accountName)).reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+    const firmFees = accs.reduce((s,a)=>s+(parseFloat(a.fee)||0)+(parseFloat(a.activation)||0),0);
+
+    return `<div class="card" style="margin-bottom:12px">
+      <div class="card-header" style="margin-bottom:14px">
+        <div>
+          <span class="card-title">${firm}</span>
+          <span class="card-sub" style="margin-left:12px">${accs.length} account${accs.length>1?'s':''} · P&L: <span class="${firmPnL>=0?'pnl-pos':'pnl-neg'}">${firmPnL>=0?'+':'-'}$${Math.abs(firmPnL).toLocaleString()}</span> · Payouts: <span class="pnl-pos">+$${firmPayouts.toLocaleString()}</span> · Fees: <span class="pnl-neg">-$${firmFees.toLocaleString()}</span></span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+        ${accs.map(a => {
+          const pnl = parseFloat(a.pnl)||0;
+          const progPct = a.target ? Math.min(100,Math.max(0,(pnl/a.target)*100)) : 0;
+          const ddPct = a.dd && pnl<0 ? Math.min(100,(Math.abs(pnl)/a.dd)*100) : 0;
+          const acPayouts = (state.propPayouts||[]).filter(p=>p.accountName===a.name).reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+          return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;position:relative">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;background:${statusColor[a.status]||'var(--border)'};border-radius:var(--r) var(--r) 0 0"></div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;margin-top:4px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text)">${a.name||a.plan+' '+a.size}</div>
+                <div style="font-size:10px;color:var(--muted)">${a.plan} · ${a.size}</div>
+              </div>
+              <span style="font-size:10px;font-weight:600;color:${statusColor[a.status]||'var(--dim)'};background:${statusColor[a.status]||'var(--dim)'}20;padding:2px 8px;border-radius:4px">${statusLabel[a.status]||a.status}</span>
+            </div>
+            <div style="font-size:28px;font-weight:800;font-family:'Geist Mono',monospace;color:${pnl>0?'var(--green)':pnl<0?'var(--red)':'var(--text)'};margin-bottom:6px">${pnl>=0?'+':'-'}$${Math.abs(pnl).toLocaleString()}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;font-size:11px">
+              ${a.target?`<div><div style="color:var(--amber);font-weight:600">$${Number(a.target).toLocaleString()}</div><div style="color:var(--dim)">Target</div></div>`:'<div></div>'}
+              ${a.dd?`<div><div style="color:var(--red);font-weight:600">$${Number(a.dd).toLocaleString()}</div><div style="color:var(--dim)">Max DD</div></div>`:'<div></div>'}
+              ${acPayouts?`<div><div style="color:var(--green);font-weight:600">+$${acPayouts.toLocaleString()}</div><div style="color:var(--dim)">Paid out</div></div>`:'<div></div>'}
+            </div>
+            ${a.target && pnl>=0?`<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:3px"><span>Progress</span><span>${Math.round(progPct)}%</span></div><div style="height:3px;background:var(--bg4);border-radius:2px"><div style="height:100%;width:${progPct}%;background:var(--green);border-radius:2px;transition:width .4s"></div></div></div>`:''}
+            ${a.dd && pnl<0?`<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:3px"><span>DD used</span><span style="color:var(--red)">${Math.round(ddPct)}%</span></div><div style="height:3px;background:var(--bg4);border-radius:2px"><div style="height:100%;width:${ddPct}%;background:var(--red);border-radius:2px;transition:width .4s"></div></div></div>`:''}
+            ${a.dll?`<div style="font-size:10px;color:var(--dim);margin-bottom:8px">DLL: <span style="color:var(--text)">$${Number(a.dll).toLocaleString()}</span>${a.ddType?` · ${a.ddType}`:''}</div>`:''}
+            ${a.notes?`<div style="font-size:11px;color:var(--muted);border-left:2px solid var(--border);padding-left:8px;margin-bottom:8px;line-height:1.5">${a.notes}</div>`:''}
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="quickUpdatePnL(${a._idx})" style="flex:1;justify-content:center">Update P&L</button>
+              <button class="btn btn-sm" onclick="openPropAccountModal(${a._idx})">Edit</button>
+              <button class="btn btn-sm" style="color:var(--red)" onclick="deletePropAccount(${a._idx})">✕</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderPropPayouts() {
+  const list = document.getElementById('prop-payouts-list');
+  if (!list) return;
+  const payouts = state.propPayouts || [];
+  if (!payouts.length) { list.innerHTML = '<div class="empty">No payouts logged yet</div>'; return; }
+  list.innerHTML = `<table class="trades-table" style="width:100%"><thead><tr><th>Account</th><th>Amount</th><th>Date</th><th>Note</th><th></th></tr></thead><tbody>
+    ${[...payouts].reverse().map((p,ri)=>{
+      const i=payouts.length-1-ri;
+      return `<tr><td>${p.accountName||p.firm||''}</td><td class="pnl-pos">+$${Number(p.amount).toLocaleString()}</td><td style="color:var(--muted)">${p.date||''}</td><td style="color:var(--muted)">${p.note||''}</td><td><button class="btn btn-sm" style="color:var(--red)" onclick="deletePropPayout(${i})">✕</button></td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+
+function quickUpdatePnL(idx) {
+  const a = state.propAccounts[idx];
+  const val = prompt(`Update P&L for ${a.name||a.firm}:`, a.pnl||0);
+  if (val===null) return;
+  state.propAccounts[idx].pnl = parseFloat(val)||0;
+  save(); renderPropFirmsPage(); renderDashboard();
+}
+
+function deletePropAccount(idx) {
+  if (!confirm('Remove this account?')) return;
+  state.propAccounts.splice(idx,1);
+  save(); renderPropFirmsPage(); updateLogPropOptions();
+}
+
+function deletePropPayout(idx) {
+  if (!confirm('Remove this payout?')) return;
+  state.propPayouts.splice(idx,1);
+  save(); renderPropFirmsPage();
+}
+
+// ─── PROP ACCOUNT MODAL ───────────────────────────────────────────────────────
+function openPropAccountModal(idx) {
+  editingPropIdx = idx !== undefined ? idx : -1;
+  document.getElementById('prop-modal-title').textContent = editingPropIdx>=0 ? 'Edit Account' : 'Add Prop Account';
+  if (editingPropIdx>=0) {
+    const a = state.propAccounts[editingPropIdx];
+    document.getElementById('pa-firm').value = a.firm||'';
+    updatePropPlanOptions();
+    document.getElementById('pa-plan').value = a.plan||'';
+    updatePropSizeOptions();
+    document.getElementById('pa-size').value = a.size||'';
+    document.getElementById('pa-name').value = a.name||'';
+    document.getElementById('pa-status').value = a.status||'eval';
+    document.getElementById('pa-pnl').value = a.pnl||0;
+    document.getElementById('pa-target').value = a.target||'';
+    document.getElementById('pa-dd').value = a.dd||'';
+    document.getElementById('pa-dll').value = a.dll||'';
+    document.getElementById('pa-fee').value = a.fee||'';
+    document.getElementById('pa-activation').value = a.activation||'';
+    document.getElementById('pa-split').value = a.split||'';
+    document.getElementById('pa-mindays').value = a.minDays||'';
+    document.getElementById('pa-maxcts').value = a.maxCts||'';
+    document.getElementById('pa-ddtype').value = a.ddType||'EOD';
+    document.getElementById('pa-notes').value = a.notes||'';
+  } else {
+    document.getElementById('pa-firm').value='';
+    document.getElementById('pa-plan').innerHTML='<option value="">— select plan —</option>';
+    document.getElementById('pa-size').innerHTML='<option value="">— select size —</option>';
+    ['pa-name','pa-target','pa-dd','pa-dll','pa-fee','pa-activation','pa-split','pa-mindays','pa-maxcts','pa-notes'].forEach(id=>{document.getElementById(id).value='';});
+    document.getElementById('pa-pnl').value=0;
+    document.getElementById('pa-status').value='eval';
+    document.getElementById('pa-ddtype').value='EOD';
+  }
+  document.getElementById('prop-account-modal').classList.add('open');
+}
+
+function closePropAccountModal() { document.getElementById('prop-account-modal').classList.remove('open'); }
+
+function updatePropPlanOptions() {
+  const firm = document.getElementById('pa-firm').value;
+  const sel = document.getElementById('pa-plan');
+  sel.innerHTML = '<option value="">— select plan —</option>';
+  if (firm && PROP_FIRMS[firm]) {
+    Object.keys(PROP_FIRMS[firm].plans).forEach(p => sel.innerHTML += `<option>${p}</option>`);
+  } else if (firm === 'Other') {
+    sel.innerHTML = '<option value="Custom">Custom</option>';
+  }
+  document.getElementById('pa-size').innerHTML='<option value="">— select size —</option>';
+}
+
+function updatePropSizeOptions() {
+  const firm = document.getElementById('pa-firm').value;
+  const plan = document.getElementById('pa-plan').value;
+  const sel = document.getElementById('pa-size');
+  sel.innerHTML = '<option value="">— select size —</option>';
+  if (firm && plan && PROP_FIRMS[firm]?.plans[plan]) {
+    PROP_FIRMS[firm].plans[plan].sizes.forEach(s => sel.innerHTML += `<option>${s}</option>`);
+  }
+}
+
+function autoFillPropRules() {
+  const firm = document.getElementById('pa-firm').value;
+  const plan = document.getElementById('pa-plan').value;
+  const size = document.getElementById('pa-size').value;
+  if (!firm || !plan || !size || !PROP_FIRMS[firm]?.plans[plan]?.rules[size]) return;
+  const r = PROP_FIRMS[firm].plans[plan].rules[size];
+  document.getElementById('pa-target').value = r.target||'';
+  document.getElementById('pa-dd').value = r.dd||'';
+  document.getElementById('pa-dll').value = r.dll||'';
+  document.getElementById('pa-fee').value = r.fee||'';
+  document.getElementById('pa-activation').value = r.activation||'';
+  document.getElementById('pa-split').value = r.split||'';
+  document.getElementById('pa-mindays').value = r.minDays||'';
+  document.getElementById('pa-maxcts').value = r.maxCts||'';
+  document.getElementById('pa-ddtype').value = r.ddType||'EOD';
+  const funded = PROP_FIRMS[firm].plans[plan].fundedNotes;
+  if (funded) document.getElementById('pa-notes').value = funded;
+}
+
+function savePropAccount() {
+  const firm = document.getElementById('pa-firm').value;
+  if (!firm) { alert('Select a firm'); return; }
+  const name = document.getElementById('pa-name').value.trim() || (document.getElementById('pa-plan').value + ' ' + document.getElementById('pa-size').value);
+  const account = {
+    firm, plan: document.getElementById('pa-plan').value,
+    size: document.getElementById('pa-size').value, name,
+    status: document.getElementById('pa-status').value,
+    pnl: parseFloat(document.getElementById('pa-pnl').value)||0,
+    target: parseFloat(document.getElementById('pa-target').value)||0,
+    dd: parseFloat(document.getElementById('pa-dd').value)||0,
+    dll: parseFloat(document.getElementById('pa-dll').value)||0,
+    fee: parseFloat(document.getElementById('pa-fee').value)||0,
+    activation: parseFloat(document.getElementById('pa-activation').value)||0,
+    split: parseFloat(document.getElementById('pa-split').value)||0,
+    minDays: parseFloat(document.getElementById('pa-mindays').value)||0,
+    maxCts: document.getElementById('pa-maxcts').value,
+    ddType: document.getElementById('pa-ddtype').value,
+    notes: document.getElementById('pa-notes').value.trim()
+  };
+  if (editingPropIdx>=0) state.propAccounts[editingPropIdx]=account;
+  else state.propAccounts.push(account);
+  save(); closePropAccountModal(); renderPropFirmsPage(); updateLogPropOptions(); renderDashboard();
+}
+
+// ─── PAYOUT MODAL ─────────────────────────────────────────────────────────────
+function openPayoutModal() {
+  populatePayoutAccountSelect();
+  document.getElementById('po-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('po-amount').value = '';
+  document.getElementById('po-note').value = '';
+  document.getElementById('prop-payout-modal').classList.add('open');
+}
+
+function populatePayoutAccountSelect() {
+  const sel = document.getElementById('po-account');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— select account —</option>';
+  (state.propAccounts||[]).forEach(a => sel.innerHTML += `<option value="${a.name}">${a.firm} — ${a.name}</option>`);
+}
+
+function savePropPayout() {
+  const accountName = document.getElementById('po-account').value;
+  const amount = parseFloat(document.getElementById('po-amount').value);
+  if (!accountName || !amount) { alert('Select account and enter amount'); return; }
+  const account = state.propAccounts.find(a=>a.name===accountName);
+  state.propPayouts.push({
+    accountName, firm: account?.firm||'',
+    amount, date: document.getElementById('po-date').value,
+    note: document.getElementById('po-note').value.trim()
+  });
+  save();
+  document.getElementById('prop-payout-modal').classList.remove('open');
+  renderPropFirmsPage();
+}
+
+// ─── LOG TRADE PROP FIRM OPTIONS ──────────────────────────────────────────────
+function updateLogPropOptions() {
+  const firmSel = document.getElementById('q-prop-firm');
+  if (!firmSel) return;
+  const cur = firmSel.value;
+  firmSel.innerHTML = '<option value="">— none / personal —</option>';
+  const firms = [...new Set((state.propAccounts||[]).map(a=>a.firm))];
+  firms.forEach(f => firmSel.innerHTML += `<option value="${f}">${f}</option>`);
+  if (cur) firmSel.value = cur;
+}
+
+function updateLogAccountOptions() {
+  const firm = document.getElementById('q-prop-firm').value;
+  const wrap = document.getElementById('q-prop-account-wrap');
+  const sel = document.getElementById('q-prop-account');
+  if (!firm) { wrap.style.display='none'; return; }
+  const accounts = (state.propAccounts||[]).filter(a=>a.firm===firm);
+  sel.innerHTML = '<option value="">— all accounts —</option>';
+  accounts.forEach(a => sel.innerHTML += `<option value="${a.name}">${a.name}</option>`);
+  wrap.style.display = accounts.length>1 ? '' : 'none';
+  if (accounts.length===1) sel.value = accounts[0].name;
+}
+
+// ─── DASHBOARD PROP SUMMARY ───────────────────────────────────────────────────
+function renderDashPropSummary() {
+  const card = document.getElementById('dash-prop-card');
+  const accounts = state.propAccounts||[];
+  if (!accounts.length) { if(card) card.style.display='none'; return; }
+  if(card) card.style.display='';
+
+  // Update filter dropdown
+  const filterSel = document.getElementById('dash-prop-filter');
+  if (filterSel) {
+    const cur = filterSel.value;
+    filterSel.innerHTML = '<option value="all">All firms</option>';
+    [...new Set(accounts.map(a=>a.firm))].forEach(f=>filterSel.innerHTML+=`<option value="${f}">${f}</option>`);
+    filterSel.value = cur&&filterSel.querySelector(`[value="${cur}"]`) ? cur : 'all';
+  }
+
+  const filter = filterSel?.value||'all';
+  const shown = filter==='all' ? accounts : accounts.filter(a=>a.firm===filter);
+  const payouts = state.propPayouts||[];
+  const statusColor = {eval:'var(--amber)',funded:'var(--green)',passed:'var(--blue)',blown:'var(--red)',inactive:'var(--dim)'};
+  const statusLabel = {eval:'Eval',funded:'Funded',passed:'Passed',blown:'Blown',inactive:'Inactive'};
+
+  document.getElementById('dash-prop-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+      ${shown.map((a,i)=>{
+        const pnl=parseFloat(a.pnl)||0;
+        const acPay=payouts.filter(p=>p.accountName===a.name).reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+        return `<div style="background:var(--bg3);border:1px solid var(--border);border-left:3px solid ${statusColor[a.status]||'var(--border)'};border-radius:var(--r);padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div style="font-size:12px;font-weight:600">${a.name||a.firm}</div>
+            <span style="font-size:9px;color:${statusColor[a.status]||'var(--dim)'};">${statusLabel[a.status]||''}</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:6px">${a.firm} · ${a.size}</div>
+          <div style="font-size:22px;font-weight:800;font-family:'Geist Mono',monospace;color:${pnl>0?'var(--green)':pnl<0?'var(--red)':'var(--text)'}">${pnl>=0?'+':'-'}$${Math.abs(pnl).toLocaleString()}</div>
+          ${a.target?`<div style="margin-top:6px"><div style="height:2px;background:var(--bg4);border-radius:1px"><div style="height:100%;width:${Math.min(100,Math.max(0,(pnl/a.target)*100))}%;background:var(--green);border-radius:1px"></div></div><div style="font-size:9px;color:var(--dim);margin-top:2px">$${pnl.toLocaleString()} / $${Number(a.target).toLocaleString()} target</div></div>`:''}
+          ${acPay?`<div style="font-size:10px;color:var(--green);margin-top:4px">+$${acPay.toLocaleString()} paid out</div>`:''}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
 // ─── PHOTO UPLOAD ─────────────────────────────────────────────────────────────
 let pendingPhotos = []; // array of base64 strings
 
@@ -3352,6 +3965,7 @@ const _now = new Date();
 const _pad = n => String(n).padStart(2,'0');
 const _localDT = `${_now.getFullYear()}-${_pad(_now.getMonth()+1)}-${_pad(_now.getDate())}T${_pad(_now.getHours())}:${_pad(_now.getMinutes())}`;
 document.getElementById('q-datetime').value = _localDT;
+updateLogPropOptions();
 if (state.trades.length > 0) renderDashboard();
 </script>
 </body>

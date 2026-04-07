@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucid Pro 25K — Game Plan Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #080808;
+  --surface: #101010;
+  --surface2: #181818;
+  --surface3: #232323;
+  --white: #f0ebe4;
+  --cream: #a8a09a;
+  --red: #c4332a;
+  --red-dim: rgba(196,51,42,0.12);
+  --green: #2ebd6a;
+  --green-dim: rgba(46,189,106,0.1);
+  --yellow: #e8a020;
+  --yellow-dim: rgba(232,160,32,0.1);
+  --blue: #4a9fd4;
+  --blue-dim: rgba(74,159,212,0.1);
+  --border: rgba(240,235,228,0.06);
+  --border-mid: rgba(240,235,228,0.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.6;min-height:100vh;}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;}
+.logo span{color:var(--red);}
+.header-right{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--cream);}
+.header-date{color:rgba(240,235,228,0.3);}
+
+/* MAIN LAYOUT */
+.main{max-width:1000px;margin:0 auto;padding:36px 40px;}
+
+/* BALANCE TRACKER */
+.balance-card{background:var(--surface);border:1px solid var(--border);padding:28px;margin-bottom:24px;}
+.balance-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:20px;flex-wrap:wrap;}
+.balance-left{}
+.balance-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:8px;}
+.balance-display{font-family:'Bebas Neue',sans-serif;font-size:64px;line-height:1;letter-spacing:1px;color:var(--white);}
+.balance-display.green{color:var(--green);}
+.balance-display.red{color:var(--red);}
+.balance-change{font-family:'DM Mono',monospace;font-size:12px;margin-top:6px;}
+.balance-change.pos{color:var(--green);}
+.balance-change.neg{color:var(--red);}
+.balance-change.flat{color:var(--cream);}
+
+.balance-input-wrap{display:flex;flex-direction:column;gap:8px;}
+.balance-input-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);}
+.balance-input{background:var(--surface3);border:1px solid var(--border-mid);color:var(--white);font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;padding:12px 16px;width:180px;outline:none;transition:border-color .2s;}
+.balance-input:focus{border-color:var(--green);}
+.update-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;background:var(--green);color:#000;border:none;padding:10px 20px;cursor:pointer;transition:all .15s;font-weight:500;}
+.update-btn:hover{background:#25a85a;}
+
+/* PROGRESS BAR */
+.progress-section{margin-bottom:16px;}
+.progress-milestones{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:12px;}
+.milestone{padding:10px 0;border-left:1px solid var(--border);padding-left:12px;}
+.milestone:first-child{border-left:none;padding-left:0;}
+.milestone-val{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--white);}
+.milestone-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--cream);margin-top:2px;}
+.milestone.reached .milestone-val{color:var(--green);}
+.milestone.current .milestone-val{color:var(--yellow);}
+
+.prog-track{height:6px;background:var(--surface3);position:relative;overflow:hidden;}
+.prog-fill{height:100%;background:var(--green);transition:width .5s ease;width:0%;}
+
+.status-bar{display:flex;align-items:center;justify-content:space-between;margin-top:12px;}
+.status-text{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;}
+.status-text.danger{color:var(--red);}
+.status-text.warning{color:var(--yellow);}
+.status-text.success{color:var(--green);}
+.payout-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:5px 14px;}
+.payout-badge.locked{background:var(--red-dim);color:var(--red);}
+.payout-badge.unlocked{background:var(--green-dim);color:var(--green);}
+
+/* PHASE SELECTOR */
+.phase-tabs{display:flex;gap:2px;margin-bottom:20px;background:var(--surface);padding:4px;border:1px solid var(--border);}
+.phase-tab{flex:1;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:10px;background:none;border:none;color:var(--cream);cursor:pointer;transition:all .15s;text-align:center;}
+.phase-tab.active{background:var(--red);color:#fff;}
+.phase-tab.done{background:var(--green-dim);color:var(--green);}
+
+/* PHASE PANELS */
+.phase-panel{display:none;}
+.phase-panel.active{display:block;}
+
+/* SECTION */
+.section-title{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:4px;}
+.section-sub{font-size:13px;color:var(--cream);margin-bottom:20px;}
+
+/* SETUP CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:6px;margin-bottom:20px;}
+.check-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.check-item:hover{border-color:var(--border-mid);}
+.check-item.checked{background:var(--green-dim);border-color:rgba(46,189,106,0.2);}
+.check-box{width:18px;height:18px;border:1px solid var(--border-mid);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .15s;}
+.check-item.checked .check-box{background:var(--green);border-color:var(--green);color:#000;}
+.check-num{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--red);width:20px;flex-shrink:0;line-height:1.2;}
+.check-text{font-size:13px;color:rgba(240,235,228,0.7);line-height:1.5;}
+.check-item.checked .check-text{color:rgba(240,235,228,0.4);}
+.check-sub{font-size:11px;color:var(--cream);margin-top:3px;font-family:'DM Mono',monospace;letter-spacing:.5px;}
+
+.setup-status{padding:12px 16px;background:var(--surface);border:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+.setup-status-text{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;}
+.setup-status-text.ready{color:var(--green);}
+.setup-status-text.not-ready{color:var(--red);}
+.setup-count{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--white);}
+
+/* RULES */
+.rules{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.rule{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;background:var(--surface);border-left:2px solid transparent;}
+.rule.go{border-left-color:var(--green);}
+.rule.warn{border-left-color:var(--yellow);}
+.rule.stop{border-left-color:var(--red);}
+.rule-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.rule.go .rule-dot{background:var(--green);}
+.rule.warn .rule-dot{background:var(--yellow);}
+.rule.stop .rule-dot{background:var(--red);}
+.rule-content{}
+.rule-text{font-size:13px;color:rgba(240,235,228,0.75);line-height:1.5;}
+.rule-note{font-size:11px;color:var(--cream);margin-top:3px;font-family:'DM Mono',monospace;}
+
+/* TRADE LOG */
+.trade-log-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.trade-log-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);}
+.add-trade-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;background:var(--surface3);color:var(--white);border:1px solid var(--border-mid);padding:7px 16px;cursor:pointer;transition:all .15s;}
+.add-trade-btn:hover{background:var(--red);border-color:var(--red);}
+
+.trade-form{background:var(--surface);border:1px solid var(--border);padding:16px;margin-bottom:12px;display:none;}
+.trade-form.open{display:block;}
+.trade-form-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+.form-field{}
+.form-label{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--cream);display:block;margin-bottom:6px;}
+.form-input,.form-select{width:100%;background:var(--surface3);border:1px solid var(--border);color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;outline:none;transition:border-color .2s;}
+.form-input:focus,.form-select:focus{border-color:var(--red);}
+.form-select{appearance:none;cursor:pointer;}
+.form-select option{background:var(--surface);}
+.form-actions{display:flex;gap:8px;}
+.btn-log{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;background:var(--green);color:#000;border:none;padding:9px 20px;cursor:pointer;font-weight:500;}
+.btn-cancel{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;background:none;color:var(--cream);border:1px solid var(--border-mid);padding:9px 16px;cursor:pointer;}
+
+.trade-table{width:100%;border-collapse:collapse;}
+.trade-table th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--cream);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.trade-table td{padding:10px 10px;font-size:13px;border-bottom:1px solid var(--border);}
+.trade-table tr:last-child td{border-bottom:none;}
+.pnl-pos{color:var(--green);font-family:'DM Mono',monospace;font-size:12px;}
+.pnl-neg{color:var(--red);font-family:'DM Mono',monospace;font-size:12px;}
+.grade-a{background:var(--green-dim);color:var(--green);padding:2px 8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;}
+.grade-b{background:var(--yellow-dim);color:var(--yellow);padding:2px 8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;}
+.grade-c{background:var(--red-dim);color:var(--red);padding:2px 8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;}
+.del-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 6px;opacity:.5;}
+.del-btn:hover{opacity:1;}
+
+.empty-trades{padding:24px;text-align:center;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:rgba(240,235,228,0.2);}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);margin-bottom:24px;}
+.stat-box{background:var(--surface);padding:16px 18px;}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1;color:var(--white);}
+.stat-val.g{color:var(--green);}
+.stat-val.r{color:var(--red);}
+.stat-val.y{color:var(--yellow);}
+.stat-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--cream);margin-top:4px;}
+
+/* MENTAL GRID */
+.mental-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;}
+.mental-card{background:var(--surface);border:1px solid var(--border);padding:14px;}
+.mental-head{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:8px;}
+.mental-body{font-size:13px;color:rgba(240,235,228,0.6);line-height:1.6;}
+
+/* SESSION NOTES */
+.notes-wrap{margin-bottom:20px;}
+.notes-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:8px;display:block;}
+.notes-area{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:300;padding:14px;resize:vertical;min-height:80px;outline:none;line-height:1.7;}
+.notes-area:focus{border-color:var(--red);}
+.save-notes-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;background:var(--surface3);color:var(--cream);border:1px solid var(--border-mid);padding:8px 16px;cursor:pointer;margin-top:8px;transition:all .15s;}
+.save-notes-btn:hover{color:var(--white);border-color:var(--border-mid);background:var(--surface2);}
+.save-notes-btn.saved{color:var(--green);border-color:rgba(46,189,106,0.2);}
+
+/* RESET */
+.reset-section{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.reset-btn{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;background:none;color:var(--red);border:1px solid rgba(196,51,42,0.3);padding:8px 16px;cursor:pointer;transition:all .15s;}
+.reset-btn:hover{background:var(--red-dim);}
+.reset-label{font-size:12px;color:rgba(240,235,228,0.25);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(240,235,228,0.1);border-radius:2px;}
+
+@media(max-width:700px){
+  .header{padding:16px 20px;}
+  .main{padding:20px;}
+  .trade-form-grid{grid-template-columns:1fr 1fr;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .mental-grid{grid-template-columns:1fr;}
+  .progress-milestones{grid-template-columns:repeat(2,1fr);}
+  .balance-display{font-size:48px;}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">LUCID PRO <span>25K</span></div>
+  <div class="header-right">
+    <div id="header-date" class="header-date"></div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- BALANCE TRACKER -->
+  <div class="balance-card">
+    <div class="balance-top">
+      <div class="balance-left">
+        <div class="balance-label">Current Account Balance</div>
+        <div class="balance-display" id="bal-display">$25,000</div>
+        <div class="balance-change flat" id="bal-change">+$0.00 from start</div>
+      </div>
+      <div class="balance-input-wrap">
+        <span class="balance-input-label">Update Balance</span>
+        <input type="number" class="balance-input" id="bal-input" value="25000" step="50" min="0" placeholder="25000">
+        <button class="update-btn" onclick="updateBalance()">Update →</button>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-milestones">
+        <div class="milestone" id="m-start">
+          <div class="milestone-val">$25,000</div>
+          <div class="milestone-lbl">Start (funded reset)</div>
+        </div>
+        <div class="milestone" id="m-buffer">
+          <div class="milestone-val">$26,100</div>
+          <div class="milestone-lbl">Buffer cleared (day 1)</div>
+        </div>
+        <div class="milestone" id="m-p500">
+          <div class="milestone-val">$26,300</div>
+          <div class="milestone-lbl">Day 2 target</div>
+        </div>
+        <div class="milestone" id="m-p1k">
+          <div class="milestone-val">$26,500</div>
+          <div class="milestone-lbl">Payout — request $400</div>
+        </div>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="prog-fill"></div>
+      </div>
+      <div class="status-bar">
+        <div class="status-text" id="status-text">Build to $26,100 to clear buffer</div>
+        <div class="payout-badge locked" id="payout-badge">PAYOUT LOCKED</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE TABS -->
+  <div class="phase-tabs">
+    <button class="phase-tab active" id="tab-eval" onclick="switchPhase('eval')">Eval Day</button>
+    <button class="phase-tab" id="tab-day1" onclick="switchPhase('day1')">Funded Day 1</button>
+    <button class="phase-tab" id="tab-day2" onclick="switchPhase('day2')">Funded Day 2</button>
+    <button class="phase-tab" id="tab-day3" onclick="switchPhase('day3')">Funded Day 3</button>
+  </div>
+
+  <!-- EVAL PHASE -->
+  <div class="phase-panel active" id="panel-eval">
+    <div class="section-title">Eval Day</div>
+    <div class="section-sub">Hit $1,250 profit ($26,250) to pass. Max size on your best A+ setup. If no setup — close and restart tomorrow for $81.</div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val">20</div><div class="stat-label">Max micros</div></div>
+      <div class="stat-box"><div class="stat-val y">$1,250</div><div class="stat-label">Profit target to pass</div></div>
+      <div class="stat-box"><div class="stat-val">$81</div><div class="stat-label">Cost to restart</div></div>
+      <div class="stat-box"><div class="stat-val g" id="eval-attempts">0</div><div class="stat-label">Attempts this round</div></div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;">Setup Checklist — All 5 Must Check Before Entry</div>
+
+    <div class="checklist" id="eval-checklist">
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-num">1</div>
+        <div><div class="check-text">HTF liquidity sweep confirmed</div><div class="check-sub">Price has taken out a significant high or low on the higher timeframe</div></div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-num">2</div>
+        <div><div class="check-text">Displacement candle present</div><div class="check-sub">Strong push in opposite direction showing institutional intent</div></div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-num">3</div>
+        <div><div class="check-text">5m or 15m pullback into FVG</div><div class="check-sub">Price retraces into imbalance created by displacement</div></div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-num">4</div>
+        <div><div class="check-text">Inversion confirmed on highest TF in the leg</div><div class="check-sub">Previous support becomes resistance or vice versa</div></div>
+      </div>
+      <div class="check-item" onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="check-num">5</div>
+        <div><div class="check-text">Clear draw on liquidity identified</div><div class="check-sub">Target: swing highs, unfilled gaps, or session liquidity — known before entry</div></div>
+      </div>
+    </div>
+
+    <div class="setup-status" id="eval-setup-status">
+      <div class="setup-status-text not-ready" id="eval-status-text">Not ready — 0/5 checked</div>
+      <div class="setup-count" id="eval-check-count">0/5</div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;">Rules</div>
+    <div class="rules" style="margin-bottom:20px;">
+      <div class="rule go"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Enter at max size — 20 micros on your best A+ setup of the session</div><div class="rule-note">MNQ: 1 micro = $0.50/point · 20 micros = $10/point</div></div></div>
+      <div class="rule warn"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Wait for the cleanest setup of the entire NY session — not the first one you see</div><div class="rule-note">London is context only. NY open is your entry window.</div></div></div>
+      <div class="rule stop"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">No setup = no trade. Close platform. Restart tomorrow for $81.</div><div class="rule-note">A forced trade is the same as throwing $81 away</div></div></div>
+      <div class="rule stop"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Miss the move = do not chase. Session is over. Tomorrow is a clean shot.</div></div></div>
+    </div>
+
+    <div class="mental-grid">
+      <div class="mental-card"><div class="mental-head">Before session</div><div class="mental-body">Mark HTF levels the night before. Know where liquidity sits. Come in with a bias — don't figure it out in the moment.</div></div>
+      <div class="mental-card"><div class="mental-head">During session</div><div class="mental-body">London is for context only. Don't touch anything. Let the sweep happen. Wait for NY to give you the entry.</div></div>
+      <div class="mental-card"><div class="mental-head">When setup appears</div><div class="mental-body">Execute without hesitation. You've already decided the criteria. All 5 check — you click. No deliberating.</div></div>
+      <div class="mental-card"><div class="mental-head">If you miss it</div><div class="mental-body">Do not chase. Do not take the next best thing. Session is over. Tomorrow is another $81 and a clean shot.</div></div>
+    </div>
+
+    <div class="notes-wrap">
+      <span class="notes-label">Session Notes — Eval</span>
+      <textarea class="notes-area" id="notes-eval" placeholder="Pre-session bias, levels marked, what you saw, why you took or passed the setup..."></textarea>
+      <button class="save-notes-btn" onclick="saveNotes('eval')">Save Notes</button>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center;margin-top:4px;">
+      <button class="reset-btn" onclick="resetChecklist('eval-checklist')">Reset Checklist</button>
+      <button class="reset-btn" onclick="logAttempt()">Log Eval Attempt (+$81)</button>
+      <span class="reset-label" id="eval-cost">Total spent: $0</span>
+    </div>
+  </div>
+
+  <!-- FUNDED DAY 1 -->
+  <div class="phase-panel" id="panel-day1">
+    <div class="section-title">Funded Day 1 — Clear The Buffer</div>
+    <div class="section-sub">Account resets to $25,000. Hit $1,100 profit to reach the $26,100 buffer. This is the biggest day — treat it like a second eval but slightly more conservative than max size.</div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val r">$1,000</div><div class="stat-label">Daily loss limit</div></div>
+      <div class="stat-box"><div class="stat-val g">$1,100</div><div class="stat-label">Target profit (buffer)</div></div>
+      <div class="stat-box"><div class="stat-val y">$26,100</div><div class="stat-label">Target balance</div></div>
+      <div class="stat-box"><div class="stat-val y" id="d1-pnl">$0</div><div class="stat-label">Today's P&L</div></div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;">Setup Checklist — Same Criteria, No Exceptions</div>
+    <div class="checklist" id="d1-checklist">
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">1</div><div><div class="check-text">HTF liquidity sweep confirmed</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">2</div><div><div class="check-text">Displacement candle present</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">3</div><div><div class="check-text">5m or 15m pullback into FVG</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">4</div><div><div class="check-text">Inversion confirmed on highest TF</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">5</div><div><div class="check-text">Clear draw on liquidity identified before entry</div></div></div>
+    </div>
+    <div class="setup-status"><div class="setup-status-text not-ready" id="d1-status-text">Not ready — 0/5 checked</div><div class="setup-count" id="d1-check-count">0/5</div></div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;margin-top:20px;">Rules</div>
+    <div class="rules" style="margin-bottom:20px;">
+      <div class="rule go"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Same A+ setup criteria — all 5 must check before you touch the button</div></div></div>
+      <div class="rule go"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Size up more than days 2 and 3 — you need $1,100 today. Treat this like a second eval but within your daily loss limit.</div><div class="rule-note">Stay under the $1,000 daily loss limit no matter what</div></div></div>
+      <div class="rule warn"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Hit $1,100 — close the platform immediately. Buffer is cleared. Days 2 and 3 are easy $200 days from here.</div></div></div>
+      <div class="rule stop"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">If you lose more than $500 today — close it. Come back tomorrow. Do not blow the daily limit chasing the buffer.</div></div></div>
+      <div class="rule stop"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">No revenge trading. One bad trade is not a reason to risk the whole account.</div></div></div>
+    </div>
+
+    <div class="trade-log-header">
+      <span class="trade-log-title">Trade Log — Day 1</span>
+      <button class="add-trade-btn" onclick="toggleTradeForm('d1')">+ Log Trade</button>
+    </div>
+    <div class="trade-form" id="form-d1">
+      <div class="trade-form-grid">
+        <div class="form-field"><label class="form-label">Time</label><input type="time" class="form-input" id="d1-time"></div>
+        <div class="form-field"><label class="form-label">Direction</label><select class="form-select" id="d1-dir"><option>Long</option><option>Short</option></select></div>
+        <div class="form-field"><label class="form-label">Size (micros)</label><input type="number" class="form-input" id="d1-size" value="2" min="1" max="4"></div>
+        <div class="form-field"><label class="form-label">P&L ($)</label><input type="number" class="form-input" id="d1-pnl-input" placeholder="+200 or -50"></div>
+        <div class="form-field"><label class="form-label">Grade</label><select class="form-select" id="d1-grade"><option>A+</option><option>A</option><option>B</option><option>C</option></select></div>
+        <div class="form-field"><label class="form-label">Setup Quality</label><select class="form-select" id="d1-quality"><option>All 5 confirmed</option><option>4/5 confirmed</option><option>3/5 confirmed</option><option>Forced</option></select></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-log" onclick="logTrade('d1')">Log Trade</button>
+        <button class="btn-cancel" onclick="toggleTradeForm('d1')">Cancel</button>
+      </div>
+    </div>
+    <div id="trades-d1"></div>
+
+    <div class="notes-wrap" style="margin-top:16px;">
+      <span class="notes-label">Session Notes — Day 1</span>
+      <textarea class="notes-area" id="notes-d1" placeholder="Pre-session bias, setups taken, lessons, mental state..."></textarea>
+      <button class="save-notes-btn" onclick="saveNotes('d1')">Save Notes</button>
+    </div>
+    <div style="margin-top:12px;"><button class="reset-btn" onclick="resetChecklist('d1-checklist')">Reset Checklist</button></div>
+  </div>
+
+  <!-- FUNDED DAY 2 -->
+  <div class="phase-panel" id="panel-day2">
+    <div class="section-title">Funded Day 2 — Stay Conservative</div>
+    <div class="section-sub">Buffer is cleared. All you need is $200 today. Small size, clean setup, close it when you hit it. Do not get greedy.</div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val r">$1,000</div><div class="stat-label">Daily loss limit</div></div>
+      <div class="stat-box"><div class="stat-val g">$200</div><div class="stat-label">Daily target</div></div>
+      <div class="stat-box"><div class="stat-val y">$26,300</div><div class="stat-label">Target balance</div></div>
+      <div class="stat-box"><div class="stat-val y" id="d2-pnl">$0</div><div class="stat-label">Today's P&L</div></div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;">Setup Checklist</div>
+    <div class="checklist" id="d2-checklist">
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">1</div><div><div class="check-text">HTF liquidity sweep confirmed</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">2</div><div><div class="check-text">Displacement candle present</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">3</div><div><div class="check-text">5m or 15m pullback into FVG</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">4</div><div><div class="check-text">Inversion confirmed on highest TF</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">5</div><div><div class="check-text">Clear draw on liquidity identified before entry</div></div></div>
+    </div>
+    <div class="setup-status"><div class="setup-status-text not-ready" id="d2-status-text">Not ready — 0/5 checked</div><div class="setup-count" id="d2-check-count">0/5</div></div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;margin-top:20px;">Critical Reminders</div>
+    <div class="rules" style="margin-bottom:20px;">
+      <div class="rule go"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">2-4 micros only. You only need $200. One clean setup and you're done for the day.</div></div></div>
+      <div class="rule warn"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Hit $200 — close the platform immediately. One more day to go. Don't give any back.</div><div class="rule-note">You're $200 away from requesting a payout after tomorrow. Protect it.</div></div></div>
+      <div class="rule stop"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Do not size up because day 1 was a big day. Today is a small day. Treat it that way.</div></div></div>
+      <div class="rule stop"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">No revenge trading. If you take a loss — one more attempt max, then close it. $200 is achievable tomorrow.</div></div></div>
+    </div>
+
+    <div class="trade-log-header">
+      <span class="trade-log-title">Trade Log — Day 2</span>
+      <button class="add-trade-btn" onclick="toggleTradeForm('d2')">+ Log Trade</button>
+    </div>
+    <div class="trade-form" id="form-d2">
+      <div class="trade-form-grid">
+        <div class="form-field"><label class="form-label">Time</label><input type="time" class="form-input" id="d2-time"></div>
+        <div class="form-field"><label class="form-label">Direction</label><select class="form-select" id="d2-dir"><option>Long</option><option>Short</option></select></div>
+        <div class="form-field"><label class="form-label">Size (micros)</label><input type="number" class="form-input" id="d2-size" value="2" min="1" max="4"></div>
+        <div class="form-field"><label class="form-label">P&L ($)</label><input type="number" class="form-input" id="d2-pnl-input" placeholder="+200 or -50"></div>
+        <div class="form-field"><label class="form-label">Grade</label><select class="form-select" id="d2-grade"><option>A+</option><option>A</option><option>B</option><option>C</option></select></div>
+        <div class="form-field"><label class="form-label">Setup Quality</label><select class="form-select" id="d2-quality"><option>All 5 confirmed</option><option>4/5 confirmed</option><option>3/5 confirmed</option><option>Forced</option></select></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-log" onclick="logTrade('d2')">Log Trade</button>
+        <button class="btn-cancel" onclick="toggleTradeForm('d2')">Cancel</button>
+      </div>
+    </div>
+    <div id="trades-d2"></div>
+
+    <div class="notes-wrap" style="margin-top:16px;">
+      <span class="notes-label">Session Notes — Day 2</span>
+      <textarea class="notes-area" id="notes-d2" placeholder="Pre-session bias, setups taken, lessons, mental state..."></textarea>
+      <button class="save-notes-btn" onclick="saveNotes('d2')">Save Notes</button>
+    </div>
+    <div style="margin-top:12px;"><button class="reset-btn" onclick="resetChecklist('d2-checklist')">Reset Checklist</button></div>
+  </div>
+
+  <!-- FUNDED DAY 3 -->
+  <div class="phase-panel" id="panel-day3">
+    <div class="section-title">Funded Day 3 — Payout Day</div>
+    <div class="section-sub">Hit $200. Account hits $26,500. You can now withdraw $400 (everything above the $26,100 buffer). Request it immediately — don't trade more trying to stack it higher.</div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val g">$26,500</div><div class="stat-label">Target balance</div></div>
+      <div class="stat-box"><div class="stat-val g">$400</div><div class="stat-label">Withdrawable profit</div></div>
+      <div class="stat-box"><div class="stat-val y">$26,100</div><div class="stat-label">Buffer (must stay above)</div></div>
+      <div class="stat-box"><div class="stat-val y" id="d3-pnl">$0</div><div class="stat-label">Today's P&L</div></div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;">Setup Checklist</div>
+    <div class="checklist" id="d3-checklist">
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">1</div><div><div class="check-text">HTF liquidity sweep confirmed</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">2</div><div><div class="check-text">Displacement candle present</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">3</div><div><div class="check-text">5m or 15m pullback into FVG</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">4</div><div><div class="check-text">Inversion confirmed on highest TF</div></div></div>
+      <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><div class="check-num">5</div><div><div class="check-text">Clear draw on liquidity identified before entry</div></div></div>
+    </div>
+    <div class="setup-status"><div class="setup-status-text not-ready" id="d3-status-text">Not ready — 0/5 checked</div><div class="setup-count" id="d3-check-count">0/5</div></div>
+
+    <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--cream);margin-bottom:12px;margin-top:20px;">Payout Rules</div>
+    <div class="rules" style="margin-bottom:20px;">
+      <div class="rule go"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">2-4 micros only. Hit $200. Account hits $26,500. Request the $400 payout immediately.</div><div class="rule-note">Withdrawable = everything above $26,100 buffer = $400</div></div></div>
+      <div class="rule warn"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Do not keep trading trying to get $500 or $1,000. Request the $400 and get the confirmed payout first.</div><div class="rule-note">A confirmed $400 is your story. That's the result drop video. That unlocks everything.</div></div></div>
+      <div class="rule go"><div class="rule-dot"></div><div class="rule-content"><div class="rule-text">Once payout is requested — pick up your phone and film it. Don't plan it. Just film the real moment. Post it. This is what everything is building toward.</div></div></div>
+    </div>
+
+    <div class="trade-log-header">
+      <span class="trade-log-title">Trade Log — Day 3</span>
+      <button class="add-trade-btn" onclick="toggleTradeForm('d3')">+ Log Trade</button>
+    </div>
+    <div class="trade-form" id="form-d3">
+      <div class="trade-form-grid">
+        <div class="form-field"><label class="form-label">Time</label><input type="time" class="form-input" id="d3-time"></div>
+        <div class="form-field"><label class="form-label">Direction</label><select class="form-select" id="d3-dir"><option>Long</option><option>Short</option></select></div>
+        <div class="form-field"><label class="form-label">Size (micros)</label><input type="number" class="form-input" id="d3-size" value="2" min="1" max="4"></div>
+        <div class="form-field"><label class="form-label">P&L ($)</label><input type="number" class="form-input" id="d3-pnl-input" placeholder="+200 or -50"></div>
+        <div class="form-field"><label class="form-label">Grade</label><select class="form-select" id="d3-grade"><option>A+</option><option>A</option><option>B</option><option>C</option></select></div>
+        <div class="form-field"><label class="form-label">Setup Quality</label><select class="form-select" id="d3-quality"><option>All 5 confirmed</option><option>4/5 confirmed</option><option>3/5 confirmed</option><option>Forced</option></select></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-log" onclick="logTrade('d3')">Log Trade</button>
+        <button class="btn-cancel" onclick="toggleTradeForm('d3')">Cancel</button>
+      </div>
+    </div>
+    <div id="trades-d3"></div>
+
+    <div class="notes-wrap" style="margin-top:16px;">
+      <span class="notes-label">Session Notes — Day 3</span>
+      <textarea class="notes-area" id="notes-d3" placeholder="Pre-session bias, setups taken, lessons, mental state..."></textarea>
+      <button class="save-notes-btn" onclick="saveNotes('d3')">Save Notes</button>
+    </div>
+    <div style="margin-top:12px;"><button class="reset-btn" onclick="resetChecklist('d3-checklist')">Reset Checklist</button></div>
+  </div>
+
+  <div class="reset-section">
+    <button class="reset-btn" onclick="fullReset()">Full Reset (New Attempt)</button>
+    <span class="reset-label">Clears all trades, notes, and checklists. Balance stays.</span>
+  </div>
+
+</div>
+
+<script>
+const START = 25000, EVAL_TARGET = 26250, BUFFER = 26100, D2_TARGET = 26300, PAYOUT = 26500;
+let state = JSON.parse(localStorage.getItem('lucid_state') || 'null') || {
+  balance: 25000,
+  attempts: 0,
+  trades: { d1: [], d2: [], d3: [] },
+  notes: { eval: '', d1: '', d2: '', d3: '' }
+};
+
+function save() { localStorage.setItem('lucid_state', JSON.stringify(state)); }
+
+function updateBalance() {
+  const val = parseFloat(document.getElementById('bal-input').value);
+  if (isNaN(val) || val < 0) return;
+  state.balance = val;
+  save();
+  renderBalance();
+}
+
+function renderBalance() {
+  const b = state.balance;
+  const disp = document.getElementById('bal-display');
+  const change = document.getElementById('bal-change');
+  const diff = b - START;
+  disp.textContent = '$' + b.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+  disp.className = 'balance-display' + (b >= P500 ? ' green' : b < START ? ' red' : '');
+  change.textContent = (diff >= 0 ? '+' : '') + '$' + diff.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' from start';
+  change.className = 'balance-change ' + (diff > 0 ? 'pos' : diff < 0 ? 'neg' : 'flat');
+
+  const pct = Math.min(100, Math.max(0, ((b - START) / (PAYOUT - START)) * 100));
+  document.getElementById('prog-fill').style.width = pct.toFixed(1) + '%';
+
+  ['m-start','m-buffer','m-p500','m-p1k'].forEach(id => document.getElementById(id).className = 'milestone');
+  if (b >= START) document.getElementById('m-start').className = 'milestone reached';
+  if (b >= BUFFER) document.getElementById('m-buffer').className = 'milestone reached';
+  if (b >= D2_TARGET) document.getElementById('m-p500').className = 'milestone reached';
+  if (b >= PAYOUT) document.getElementById('m-p1k').className = 'milestone reached';
+
+  const st = document.getElementById('status-text');
+  const pb = document.getElementById('payout-badge');
+  if (b < BUFFER) {
+    st.textContent = 'Day 1: $' + Math.round(BUFFER - b).toLocaleString() + ' to clear buffer ($26,100)';
+    st.className = 'status-text danger';
+    pb.textContent = 'BUFFER NOT CLEARED';
+    pb.className = 'payout-badge locked';
+  } else if (b < D2_TARGET) {
+    st.textContent = 'Buffer cleared — Day 2: $' + Math.round(D2_TARGET - b).toLocaleString() + ' to hit $26,300';
+    st.className = 'status-text warning';
+    pb.textContent = 'PAYOUT LOCKED';
+    pb.className = 'payout-badge locked';
+  } else if (b < PAYOUT) {
+    st.textContent = 'Day 3: $' + Math.round(PAYOUT - b).toLocaleString() + ' to hit $26,500 — then request $400 payout';
+    st.className = 'status-text warning';
+    pb.textContent = 'PAYOUT LOCKED';
+    pb.className = 'payout-badge locked';
+  } else {
+    const w = Math.round(b - BUFFER);
+    st.textContent = 'Request $' + w.toLocaleString() + ' payout NOW — do not trade more!';
+    st.className = 'status-text success';
+    pb.textContent = 'REQUEST PAYOUT NOW';
+    pb.className = 'payout-badge unlocked';
+  }
+
+  document.getElementById('bal-input').value = b;
+}
+
+function switchPhase(phase) {
+  document.querySelectorAll('.phase-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.phase-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + phase).classList.add('active');
+  document.getElementById('tab-' + phase).classList.add('active');
+}
+
+function toggleCheck(item) {
+  item.classList.toggle('checked');
+  const check = item.querySelector('.check-box');
+  check.textContent = item.classList.contains('checked') ? '✓' : '';
+  updateChecklistStatus(item.closest('.checklist'));
+}
+
+function updateChecklistStatus(list) {
+  const id = list.id;
+  const total = list.querySelectorAll('.check-item').length;
+  const done = list.querySelectorAll('.check-item.checked').length;
+  const prefix = id.replace('-checklist','');
+  const statusEl = document.getElementById(prefix + '-status-text');
+  const countEl = document.getElementById(prefix + '-check-count');
+  if (!statusEl) return;
+  countEl.textContent = done + '/' + total;
+  if (done === total) {
+    statusEl.textContent = 'Setup confirmed — A+ criteria met. Execute.';
+    statusEl.className = 'setup-status-text ready';
+  } else {
+    statusEl.textContent = 'Not ready — ' + done + '/' + total + ' checked';
+    statusEl.className = 'setup-status-text not-ready';
+  }
+}
+
+function resetChecklist(listId) {
+  const list = document.getElementById(listId);
+  list.querySelectorAll('.check-item').forEach(item => {
+    item.classList.remove('checked');
+    item.querySelector('.check-box').textContent = '';
+  });
+  updateChecklistStatus(list);
+}
+
+function toggleTradeForm(day) {
+  const form = document.getElementById('form-' + day);
+  form.classList.toggle('open');
+}
+
+function logTrade(day) {
+  const time = document.getElementById(day + '-time').value || '--:--';
+  const dir = document.getElementById(day + '-dir').value;
+  const size = parseInt(document.getElementById(day + '-size').value) || 2;
+  const pnl = parseFloat(document.getElementById(day + '-pnl-input').value) || 0;
+  const grade = document.getElementById(day + '-grade').value;
+  const quality = document.getElementById(day + '-quality').value;
+
+  state.trades[day].push({ time, dir, size, pnl, grade, quality, id: Date.now() });
+  save();
+  renderTrades(day);
+  document.getElementById('form-' + day).classList.remove('open');
+  document.getElementById(day + '-pnl-input').value = '';
+}
+
+function deleteTrade(day, id) {
+  state.trades[day] = state.trades[day].filter(t => t.id !== id);
+  save();
+  renderTrades(day);
+}
+
+function renderTrades(day) {
+  const trades = state.trades[day];
+  const container = document.getElementById('trades-' + day);
+  const totalPnl = trades.reduce((s, t) => s + t.pnl, 0);
+  const pnlEl = document.getElementById(day + '-pnl');
+  if (pnlEl) {
+    pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + '$' + totalPnl.toFixed(0);
+    pnlEl.className = 'stat-val ' + (totalPnl > 0 ? 'g' : totalPnl < 0 ? 'r' : 'y');
+  }
+
+  if (trades.length === 0) {
+    container.innerHTML = '<div class="empty-trades">No trades logged yet</div>';
+    return;
+  }
+
+  let html = '<table class="trade-table"><thead><tr><th>Time</th><th>Dir</th><th>Size</th><th>P&L</th><th>Grade</th><th>Quality</th><th></th></tr></thead><tbody>';
+  trades.forEach(t => {
+    const gradeClass = t.grade === 'A+' || t.grade === 'A' ? 'grade-a' : t.grade === 'B' ? 'grade-b' : 'grade-c';
+    html += `<tr>
+      <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cream);">${t.time}</td>
+      <td style="font-size:13px;">${t.dir}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:12px;">${t.size}</td>
+      <td class="${t.pnl >= 0 ? 'pnl-pos' : 'pnl-neg'}">${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(0)}</td>
+      <td><span class="${gradeClass}">${t.grade}</span></td>
+      <td style="font-size:11px;color:var(--cream);">${t.quality}</td>
+      <td><button class="del-btn" onclick="deleteTrade('${day}',${t.id})">×</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function saveNotes(key) {
+  const area = document.getElementById('notes-' + key);
+  state.notes[key] = area.value;
+  save();
+  const btn = area.nextElementSibling;
+  btn.textContent = 'Saved ✓';
+  btn.classList.add('saved');
+  setTimeout(() => { btn.textContent = 'Save Notes'; btn.classList.remove('saved'); }, 2000);
+}
+
+function logAttempt() {
+  state.attempts = (state.attempts || 0) + 1;
+  save();
+  document.getElementById('eval-attempts').textContent = state.attempts;
+  document.getElementById('eval-cost').textContent = 'Total spent: $' + (state.attempts * 81);
+}
+
+function fullReset() {
+  if (!confirm('Reset all trades, notes and checklists? Balance stays.')) return;
+  state.trades = { d1: [], d2: [], d3: [] };
+  state.notes = { eval: '', d1: '', d2: '', d3: '' };
+  state.attempts = 0;
+  save();
+  ['d1','d2','d3'].forEach(d => { renderTrades(d); document.getElementById('notes-' + d).value = ''; resetChecklist(d + '-checklist'); });
+  document.getElementById('notes-eval').value = '';
+  resetChecklist('eval-checklist');
+  document.getElementById('eval-attempts').textContent = '0';
+  document.getElementById('eval-cost').textContent = 'Total spent: $0';
+}
+
+function init() {
+  document.getElementById('header-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+  renderBalance();
+  ['d1','d2','d3'].forEach(d => { renderTrades(d); if (state.notes[d]) document.getElementById('notes-' + d).value = state.notes[d]; });
+  if (state.notes.eval) document.getElementById('notes-eval').value = state.notes.eval;
+  document.getElementById('eval-attempts').textContent = state.attempts || 0;
+  document.getElementById('eval-cost').textContent = 'Total spent: $' + ((state.attempts || 0) * 81);
+}
+
+init();
+</script>
+</body>
+</html>
