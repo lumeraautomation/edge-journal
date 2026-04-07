@@ -988,8 +988,16 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
       <span class="card-title">Import from Tradovate CSV</span>
       <button class="btn btn-sm" onclick="loadDemo()">Load demo data</button>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Export your fills from Tradovate and paste below. Columns needed: <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">side</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">avgFillPrice</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">qty</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">filledTime</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">name</code> <code style="background:var(--bg3);padding:1px 6px;border-radius:3px">status</code></p>
-    <textarea id="csv-raw" style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:12px;font-family:var(--mono);color:var(--text);resize:vertical" placeholder="Paste CSV here..."></textarea>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6">Export <strong>Position History</strong> from Tradovate and paste below, or click to browse your file.</p>
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+      <label class="btn btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        <svg viewBox="0 0 16 16" fill="none" width="13" height="13"><path d="M2 10v3h12v-3M8 2v8M5 5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Browse file
+        <input type="file" accept=".csv,.txt" style="display:none" onchange="loadCSVFile(event)">
+      </label>
+      <span style="font-size:11px;color:var(--dim)">or paste below</span>
+    </div>
+    <textarea id="csv-raw" style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:12px;font-family:var(--mono);color:var(--text);resize:vertical" placeholder="Paste CSV here or use Browse file above..."></textarea>
     <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
       <button class="btn btn-green" onclick="parseCSV()">Parse &amp; preview ↗</button>
       <span id="csv-feedback" style="font-size:12px;color:var(--muted)"></span>
@@ -2383,6 +2391,18 @@ function savePlaybook(){const n=document.getElementById('pb-name').value.trim();
 function removePlaybook(i){if(!confirm('Remove this playbook entry?'))return;state.playbook.splice(i,1);save();renderPlaybook();}
 
 // ─── CSV IMPORT ───────────────────────────────────────────────────────────────
+function loadCSVFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('csv-raw').value = ev.target.result;
+    parseCSV();
+  };
+  reader.readAsText(file);
+  e.target.value = ''; // reset so same file can be picked again
+}
+
 function parseCSV(){
   const raw=document.getElementById('csv-raw').value.trim();
   if(!raw){alert('Paste CSV data first');return;}
