@@ -996,6 +996,9 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
         <input type="file" accept=".csv,.txt" style="display:none" onchange="loadCSVFile(event)">
       </label>
       <span style="font-size:11px;color:var(--dim)">or paste below</span>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <div class="qe-field" style="min-width:140px"><label style="font-size:10px">Default setup for imports</label><select id="csv-default-setup" style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:5px 8px;font-size:12px;color:var(--text);width:100%"><option value="">— none —</option></select></div>
+      </div>
     </div>
     <textarea id="csv-raw" style="width:100%;min-height:90px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:10px;font-size:12px;font-family:var(--mono);color:var(--text);resize:vertical" placeholder="Paste CSV here or use Browse file above..."></textarea>
     <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
@@ -1835,7 +1838,12 @@ function renderLogPage() {
   const localDT=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
   if(dtEl&&!dtEl.value) dtEl.value=localDT;
   if(dtElD&&!dtElD.value) dtElD.value=localDT;
-  // Populate detailed mode setup dropdown too
+  // Populate CSV import setup dropdown
+  const csvSetupSel = document.getElementById('csv-default-setup');
+  if (csvSetupSel) {
+    csvSetupSel.innerHTML = '<option value="">— none —</option>' + state.setups.map(s=>`<option>${s}</option>`).join('');
+  }
+  // Populate detailed mode setup dropdown
   const selD=document.getElementById('q-setup-d');
   if(selD) selD.innerHTML='<option value="">— setup —</option>'+state.setups.map(s=>`<option>${s}</option>`).join('');
   state.selectedSetups=[]; state.selectedMistakes=[];
@@ -2498,8 +2506,26 @@ function parseCSV(){
       ${preview.map((t,i)=>{const pnl=calcPnL(t);return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);flex-wrap:wrap"><span class="side-pill ${t.side==='long'?'long-pill':'short-pill'}">${t.side.toUpperCase()}</span><strong>${t.ticker}</strong><span style="font-size:11px;color:var(--muted)">${t.datetime.slice(0,16).replace('T',' ')}</span><span style="font-size:12px;font-family:var(--mono)">${t.entry||'—'} → ${t.exit||'—'} ×${t.qty}</span><span style="margin-left:auto;font-weight:700;font-family:var(--mono)" class="${pnl>=0?'pnl-pos':'pnl-neg'}">${pf(pnl)}</span><button class="btn btn-sm" onclick="importOne(${i})">Import</button></div>`;}).join('')}
     </div>`;
 }
-function importOne(i){if(!window._importPreview?.[i])return;state.trades.push({...window._importPreview[i]});save();reviewTrade(state.trades.length-1);}
-function importAll(){if(!window._importPreview?.length)return;window._importPreview.forEach(t=>state.trades.push({...t}));save();go('history');}
+function importOne(i){
+  if(!window._importPreview?.[i])return;
+  const t={...window._importPreview[i]};
+  const setup=document.getElementById('csv-default-setup')?.value;
+  if(setup&&!t.setups?.length) t.setups=[setup];
+  state.trades.push(t);
+  save();
+  reviewTrade(state.trades.length-1);
+}
+function importAll(){
+  if(!window._importPreview?.length)return;
+  const setup=document.getElementById('csv-default-setup')?.value;
+  window._importPreview.forEach(t=>{
+    const trade={...t};
+    if(setup&&!trade.setups?.length) trade.setups=[setup];
+    state.trades.push(trade);
+  });
+  save();
+  go('history');
+}
 
 function loadDemo(){
   const demos=[
@@ -3390,7 +3416,8 @@ const GRADING_TEMPLATES = {
     label: 'I only trade between...',
     fields: [
       {id:'time-start', label:'Start (EST)', placeholder:'09:30', key:'sessionStart'},
-      {id:'time-end', label:'End (EST)', placeholder:'11:00', key:'sessionEnd'}
+      {id:'time-end', label:'End (EST)', placeholder:'11:00', key:'sessionEnd'},
+      {id:'time-tz', label:'Your timezone', placeholder:'CST', key:'timezone'}
     ],
     type: 'time'
   },
@@ -3530,7 +3557,8 @@ function buildGradingContext() {
     const rr = gc.minRR === 'Custom' ? gc.minRRCustom : gc.minRR.replace(':1','');
     if (rr) lines.push(`MINIMUM R:R: ${rr} — trades below this are penalized`);
   }
-  if (gc.sessionStart || gc.sessionEnd) lines.push(`TRADING HOURS: ${gc.sessionStart||'any'} – ${gc.sessionEnd||'any'} EST only — trades outside this window get a lower grade`);
+  if (gc.sessionStart || gc.sessionEnd) lines.push(`TRADING HOURS: ${gc.sessionStart||'any'} – ${gc.sessionEnd||'any'} EST only — trades outside this window get a lower grade. IMPORTANT: The trader's timestamps may be in their local timezone (CST/MST/PST etc), not EST. Add the appropriate offset before checking: CST = EST-1hr, MST = EST-2hr, PST = EST-3hr. Do NOT penalize a trade purely based on the raw timestamp number without accounting for timezone.`);
+  if (gc.timezone) lines.push(`TRADER TIMEZONE: ${gc.timezone} — all timestamps in the journal are in ${gc.timezone}. Convert to EST before checking session hours.`);
   if (gc.mustFollowRules) lines.push(`MUST-FOLLOW RULES:\n${gc.mustFollowRules}`);
   if (gc.dealbreakers?.length) lines.push(`INSTANT GRADE KILLERS (auto D/F if present): ${gc.dealbreakers.join(', ')}`);
   if (!lines.length) return '';
