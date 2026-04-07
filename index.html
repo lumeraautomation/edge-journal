@@ -871,52 +871,71 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
 <!-- LOG TRADE -->
 <div class="page" id="page-log">
   <div class="page-header">
-    <div><div class="page-title">Log a Trade</div><div class="page-sub">Fill in the details and hit Log — AI reviews instantly</div></div>
+    <div><div class="page-title">Log a Trade</div><div class="page-sub" id="log-mode-sub">Quick mode — just P&L and R:R</div></div>
   </div>
 
   <div class="card" style="margin-bottom:16px">
     <div class="card-header" style="margin-bottom:16px">
-      <span class="card-title">Trade details</span>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span class="card-title">Trade details</span>
+        <div style="display:flex;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r);padding:2px;gap:2px">
+          <button id="mode-quick" onclick="setLogMode('quick')" style="font-size:11px;font-family:'Geist',sans-serif;font-weight:600;padding:5px 14px;border:none;border-radius:4px;cursor:pointer;background:var(--green);color:#000;transition:all .15s">Quick</button>
+          <button id="mode-detailed" onclick="setLogMode('detailed')" style="font-size:11px;font-family:'Geist',sans-serif;font-weight:600;padding:5px 14px;border:none;border-radius:4px;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s">Detailed</button>
+        </div>
+      </div>
       <div class="side-toggle">
         <button class="side-btn long-active" id="btn-long" onclick="setSide('long')">Long</button>
         <button class="side-btn" id="btn-short" onclick="setSide('short')">Short</button>
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
-      <div class="qe-field"><label>Ticker</label><input id="q-ticker" placeholder="NQ" value="NQ"></div>
-      <div class="qe-field"><label>Entry $</label><input id="q-entry" type="number" placeholder="21000"></div>
-      <div class="qe-field"><label>Exit $</label><input id="q-exit" type="number" placeholder="21050"></div>
-      <div class="qe-field"><label>Qty</label><input id="q-qty" type="number" value="1"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
-      <div class="qe-field"><label>Stop $</label><input id="q-sl" type="number" placeholder="20980"></div>
-      <div class="qe-field"><label>Target $</label><input id="q-tp" type="number" placeholder="21080"></div>
-      <div class="qe-field"><label>Fees $</label><input id="q-fees" type="number" value="0"></div>
-      <div class="qe-field"><label>Date &amp; Time</label><input id="q-datetime" type="datetime-local"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-      <div class="qe-field"><label>Setup</label><select id="q-setup"><option value="">— setup —</option></select></div>
-      <div class="qe-field"><label>Outcome</label>
-        <select id="q-outcome">
-          <option value="">— outcome —</option>
-          <option value="win">Win</option>
-          <option value="loss">Loss</option>
-          <option value="be_win">BE → Win</option>
-          <option value="be_loss">BE → Loss</option>
-        </select>
+    <!-- QUICK MODE -->
+    <div id="log-mode-quick">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
+        <div class="qe-field"><label>Ticker</label><input id="q-ticker" placeholder="NQ" value="NQ"></div>
+        <div class="qe-field"><label>P&amp;L ($)</label><input id="q-quick-pnl" type="number" placeholder="+500 or -250"></div>
+        <div class="qe-field"><label>R:R</label><input id="q-quick-rr" type="number" step="0.1" placeholder="e.g. 2.5"></div>
+        <div class="qe-field"><label>Date &amp; Time</label><input id="q-datetime" type="datetime-local"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="qe-field"><label>Setup</label><select id="q-setup"><option value="">— setup —</option></select></div>
+        <div class="qe-field"><label>Outcome</label>
+          <select id="q-outcome">
+            <option value="">— outcome —</option>
+            <option value="win">Win</option>
+            <option value="loss">Loss</option>
+            <option value="be_win">BE → Win</option>
+            <option value="be_loss">BE → Loss</option>
+          </select>
+        </div>
+        <div class="qe-field"><label>Fees $</label><input id="q-fees" type="number" value="0"></div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" id="prop-account-selectors">
-      <div class="qe-field"><label>Prop Firm <span style="color:var(--dim);font-weight:400;font-size:11px">— optional</span></label>
-        <select id="q-prop-firm" onchange="updateLogAccountOptions()">
-          <option value="">— none / personal —</option>
-        </select>
+
+    <!-- DETAILED MODE -->
+    <div id="log-mode-detailed" style="display:none">
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
+        <div class="qe-field"><label>Entry $</label><input id="q-entry" type="number" placeholder="21000"></div>
+        <div class="qe-field"><label>Exit $</label><input id="q-exit" type="number" placeholder="21050"></div>
+        <div class="qe-field"><label>Qty</label><input id="q-qty" type="number" value="1"></div>
+        <div class="qe-field"><label>Fees $</label><input id="q-fees-d" type="number" value="0"></div>
       </div>
-      <div class="qe-field" id="q-prop-account-wrap" style="display:none"><label>Account</label>
-        <select id="q-prop-account">
-          <option value="">— select account —</option>
-        </select>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:12px">
+        <div class="qe-field"><label>Stop $</label><input id="q-sl" type="number" placeholder="20980"></div>
+        <div class="qe-field"><label>Target $</label><input id="q-tp" type="number" placeholder="21080"></div>
+        <div class="qe-field"><label>Setup</label><select id="q-setup-d"><option value="">— setup —</option></select></div>
+        <div class="qe-field"><label>Outcome</label>
+          <select id="q-outcome-d">
+            <option value="">— outcome —</option>
+            <option value="win">Win</option>
+            <option value="loss">Loss</option>
+            <option value="be_win">BE → Win</option>
+            <option value="be_loss">BE → Loss</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+        <div class="qe-field"><label>Date &amp; Time</label><input id="q-datetime-d" type="datetime-local"></div>
       </div>
     </div>
 
@@ -930,9 +949,20 @@ html,body{height:100%;width:100%;margin:0;padding:0;overflow:hidden;background:v
         <label>Chart screenshots <span style="color:var(--dim);font-weight:400;font-size:11px">— optional, up to 4</span></label>
         <div class="photo-upload-area" style="margin-top:6px" onclick="document.getElementById('photo-input').click()">
           <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotoUpload(event)">
-          <div class="photo-upload-label">Drop charts here or <span>click to upload</span><br><span style="font-size:10px;color:var(--dim)">PNG, JPG, WEBP — before/after entry</span></div>
+          <div class="photo-upload-label">Drop charts here or <span>click to upload</span><br><span style="font-size:10px;color:var(--dim)">PNG, JPG, WEBP</span></div>
         </div>
         <div class="photo-preview-grid" id="photo-preview-grid"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px" id="prop-account-selectors">
+      <div class="qe-field"><label>Prop Firm <span style="color:var(--dim);font-weight:400;font-size:11px">— optional</span></label>
+        <select id="q-prop-firm" onchange="updateLogAccountOptions()">
+          <option value="">— none / personal —</option>
+        </select>
+      </div>
+      <div class="qe-field" id="q-prop-account-wrap" style="display:none"><label>Account</label>
+        <select id="q-prop-account"><option value="">— select account —</option></select>
       </div>
     </div>
 
@@ -1662,12 +1692,14 @@ function go(page) {
 
 // ─── CALC ─────────────────────────────────────────────────────────────────────
 function calcPnL(t) {
+  if (t.quickMode && t.quickPnL !== undefined) return t.quickPnL - (t.fees||0);
   const m = {NQ:20,MNQ:2,ES:50,MES:5};
   const mult = m[t.ticker?.toUpperCase()] || 1;
   const dir = t.side === 'long' ? 1 : -1;
   return dir * (t.exit - t.entry) * mult * (t.qty||1) - (t.fees||0);
 }
 function calcRR(t) {
+  if (t.quickMode && t.quickRR) return parseFloat(t.quickRR).toFixed(1);
   if (!t.sl||!t.tp||t.sl===t.entry||t.tp===t.entry) return null;
   const risk = Math.abs(t.entry - t.sl);
   const reward = Math.abs(t.tp - t.entry);
@@ -1790,7 +1822,13 @@ function renderLogPage() {
   // Set datetime to local time
   const now=new Date(),pad=n=>String(n).padStart(2,'0');
   const dtEl=document.getElementById('q-datetime');
-  if(dtEl&&!dtEl.value) dtEl.value=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const dtElD=document.getElementById('q-datetime-d');
+  const localDT=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  if(dtEl&&!dtEl.value) dtEl.value=localDT;
+  if(dtElD&&!dtElD.value) dtElD.value=localDT;
+  // Populate detailed mode setup dropdown too
+  const selD=document.getElementById('q-setup-d');
+  if(selD) selD.innerHTML='<option value="">— setup —</option>'+state.setups.map(s=>`<option>${s}</option>`).join('');
   state.selectedSetups=[]; state.selectedMistakes=[];
   renderTagSelectors();
   updateLogPropOptions();
@@ -1811,22 +1849,48 @@ function removeMistake(i){state.mistakes.splice(i,1);save();renderLogPage();}
 
 function buildTrade(withNotes) {
   const ticker=(document.getElementById('q-ticker').value||'NQ').trim().toUpperCase();
-  const entry=parseFloat(document.getElementById('q-entry').value);
-  const exit=parseFloat(document.getElementById('q-exit').value);
-  const qty=parseInt(document.getElementById('q-qty').value)||1;
-  const sl=parseFloat(document.getElementById('q-sl').value)||null;
-  const tp=parseFloat(document.getElementById('q-tp').value)||null;
-  const fees=parseFloat(document.getElementById('q-fees').value)||0;
-  const datetime=document.getElementById('q-datetime').value;
-  const setup=document.getElementById('q-setup').value;
-  const outcome=document.getElementById('q-outcome').value;
-  const propFirm=document.getElementById('q-prop-firm')?.value||'';
-  const propAccount=document.getElementById('q-prop-account')?.value||'';
-  if(!entry||!exit){alert('Entry and exit price required');return null;}
-  const setups=withNotes?[...state.selectedSetups]:(setup?[setup]:[]);
-  const mistakes=withNotes?[...state.selectedMistakes]:[];
-  const notes=withNotes?(document.getElementById('full-notes').value||''):'';
-  return {ticker,side:state.selectedSide,entry,exit,qty,sl,tp,fees,datetime,outcome,propFirm,propAccount,setups,mistakes,notes,grade:null,review:null};
+  const isQuick = currentLogMode === 'quick';
+
+  let entry=null, exit=null, qty=1, sl=null, tp=null, fees=0, datetime='', setup='', outcome='';
+
+  if (isQuick) {
+    // Quick mode — P&L and R:R only
+    const pnl = parseFloat(document.getElementById('q-quick-pnl').value);
+    const rr = parseFloat(document.getElementById('q-quick-rr').value)||null;
+    fees = parseFloat(document.getElementById('q-fees').value)||0;
+    datetime = document.getElementById('q-datetime').value;
+    setup = document.getElementById('q-setup').value;
+    outcome = document.getElementById('q-outcome').value;
+    if (isNaN(pnl)) { alert('Enter P&L amount'); return null; }
+    // Store quick mode data — use dummy entry/exit to represent P&L
+    // entry=0, exit=pnl (so calcPnL returns pnl correctly for qty=1)
+    entry = 0; exit = pnl; qty = 1;
+    if (rr) { sl = -1; tp = rr; } // store RR in tp field for display
+    const setups = withNotes ? [...state.selectedSetups] : (setup?[setup]:[]);
+    const mistakes = withNotes ? [...state.selectedMistakes] : [];
+    const notes = withNotes ? (document.getElementById('full-notes').value||'') : '';
+    const propFirm = document.getElementById('q-prop-firm')?.value||'';
+    const propAccount = document.getElementById('q-prop-account')?.value||'';
+    return {ticker, side:state.selectedSide, entry, exit, qty, sl, tp, fees, datetime, outcome, propFirm, propAccount, setups, mistakes, notes, grade:null, review:null, quickMode:true, quickPnL:pnl, quickRR:rr};
+  } else {
+    // Detailed mode
+    entry = parseFloat(document.getElementById('q-entry').value);
+    exit = parseFloat(document.getElementById('q-exit').value);
+    qty = parseInt(document.getElementById('q-qty').value)||1;
+    sl = parseFloat(document.getElementById('q-sl').value)||null;
+    tp = parseFloat(document.getElementById('q-tp').value)||null;
+    fees = parseFloat(document.getElementById('q-fees-d').value)||0;
+    datetime = document.getElementById('q-datetime-d').value || document.getElementById('q-datetime').value;
+    setup = document.getElementById('q-setup-d').value;
+    outcome = document.getElementById('q-outcome-d').value;
+    if (!entry||!exit) { alert('Entry and exit price required'); return null; }
+    const setups = withNotes ? [...state.selectedSetups] : (setup?[setup]:[]);
+    const mistakes = withNotes ? [...state.selectedMistakes] : [];
+    const notes = withNotes ? (document.getElementById('full-notes').value||'') : '';
+    const propFirm = document.getElementById('q-prop-firm')?.value||'';
+    const propAccount = document.getElementById('q-prop-account')?.value||'';
+    return {ticker, side:state.selectedSide, entry, exit, qty, sl, tp, fees, datetime, outcome, propFirm, propAccount, setups, mistakes, notes, grade:null, review:null};
+  }
 }
 
 function quickLog(){const t=buildTrade(false);if(!t)return;state.trades.push(t);save();document.getElementById('q-entry').value='';document.getElementById('q-exit').value='';reviewTrade(state.trades.length-1);}
@@ -1844,6 +1908,9 @@ function fullLog(){
   document.getElementById('q-entry').value='';
   document.getElementById('q-exit').value='';
   document.getElementById('q-outcome').value='';
+  const qpnl=document.getElementById('q-quick-pnl'); if(qpnl) qpnl.value='';
+  const qrr=document.getElementById('q-quick-rr'); if(qrr) qrr.value='';
+  const qod=document.getElementById('q-outcome-d'); if(qod) qod.value='';
   renderTagSelectors();
   reviewTrade(state.trades.length-1);
 }
@@ -3124,6 +3191,26 @@ function fullLogGated() {
 function toggleMore(el) {
   el.classList.toggle('open');
   document.getElementById('more-submenu').classList.toggle('open');
+}
+
+// ─── LOG MODE TOGGLE ──────────────────────────────────────────────────────────
+let currentLogMode = 'quick';
+
+function setLogMode(mode) {
+  currentLogMode = mode;
+  document.getElementById('log-mode-quick').style.display = mode==='quick' ? '' : 'none';
+  document.getElementById('log-mode-detailed').style.display = mode==='detailed' ? '' : 'none';
+  document.getElementById('mode-quick').style.background = mode==='quick' ? 'var(--green)' : 'transparent';
+  document.getElementById('mode-quick').style.color = mode==='quick' ? '#000' : 'var(--muted)';
+  document.getElementById('mode-detailed').style.background = mode==='detailed' ? 'var(--green)' : 'transparent';
+  document.getElementById('mode-detailed').style.color = mode==='detailed' ? '#000' : 'var(--muted)';
+  const sub = document.getElementById('log-mode-sub');
+  if (sub) sub.textContent = mode==='quick' ? 'Quick mode — just P&L and R:R' : 'Detailed mode — full price entry';
+  // Sync datetime and setup fields
+  const dtQ = document.getElementById('q-datetime');
+  const dtD = document.getElementById('q-datetime-d');
+  if (mode==='detailed' && dtD && dtQ) dtD.value = dtQ.value;
+  if (mode==='quick' && dtQ && dtD) dtQ.value = dtD.value || dtQ.value;
 }
 
 // ─── PAGE EXPLAINERS ─────────────────────────────────────────────────────────
